@@ -10,6 +10,7 @@
     
     <style>
         :root {
+            /* Điều chỉnh độ sáng tối sâu chuẩn màu Spck như ảnh 1 */
             --bg-dark: #07090e;
             --sidebar-bg: #0b111e;
             --editor-bg: #0d1222;
@@ -43,10 +44,9 @@
             height: 100dvh;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
-        /* 1. THANH NAV TRÊN CÙNG */
+        /* 1. THANH MENU TRÊN CÙNG */
         .top-nav {
             height: 48px;
             background-color: var(--top-bar-bg);
@@ -55,7 +55,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 16px;
-            z-index: 50;
+            z-index: 10;
         }
 
         .nav-left, .nav-right {
@@ -78,7 +78,7 @@
             cursor: pointer;
         }
 
-        /* 2. KHU VỰC THÂN CHÍNH */
+        /* 2. THÂN ỨNG DỤNG */
         .main-content {
             flex: 1;
             display: flex;
@@ -87,25 +87,19 @@
             height: calc(100dvh - 48px);
         }
 
-        /* SIDEBAR QUẢN LÝ TỆP TIN */
+        /* SIDEBAR FILE MENU */
         .sidebar {
-            width: 260px;
-            min-width: 260px;
+            width: 250px;
+            min-width: 250px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            z-index: 100;
-            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(0);
+            transition: margin-left 0.25s ease-in-out;
         }
 
         .sidebar.collapsed {
-            transform: translateX(-260px);
+            margin-left: -250px;
         }
 
         .sidebar-header {
@@ -134,57 +128,42 @@
             padding: 6px 0;
         }
 
-        /* ĐỊNH DẠNG CÁC PHẦN TỬ TRONG CÂY FILE */
         .tree-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 12px;
+            padding: 10px 14px;
             font-size: 14px;
             cursor: pointer;
             color: #cbd5e1;
-            border-radius: 4px;
-            margin: 2px 6px;
         }
-        .tree-item:hover {
-            background-color: rgba(255, 255, 255, 0.04);
-        }
-        .tree-item.active {
-            background-color: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-        }
-        .tree-item.selected-folder {
-            background-color: rgba(245, 158, 11, 0.1);
-            border: 1px dashed rgba(245, 158, 11, 0.4);
+        .tree-item:hover, .tree-item.active {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
         }
         
         .tree-item-left {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            gap: 10px;
         }
-        .tree-item .item-icon { width: 16px; text-align: center; font-size: 14px; }
+        .tree-item .item-icon { width: 16px; text-align: center; }
         .tree-item .fa-ellipsis-vertical {
             color: var(--text-muted);
             padding: 4px 8px;
-            cursor: pointer;
         }
         .tree-item .fa-ellipsis-vertical:hover { color: #fff; }
         
-        /* Màu biểu tượng tệp tin mở rộng */
-        .fa-folder, .fa-folder-open { color: #f59e0b; }
+        /* Đắp màu icon ngôn ngữ */
+        .fa-folder { color: #f59e0b; }
         .fa-java { color: #ea2d2e; }
         .fa-html5 { color: #e34c26; }
         .fa-js { color: #f7df1e; }
         .fa-php { color: #777bb4; }
         .fa-css3-alt { color: #2196f3; }
-        .fa-file-code { color: #94a3b8; }
+        .fa-file-lines { color: #94a3b8; }
 
-        /* KHÔNG GIAN EDITOR */
+        /* VÙNG CHỨA EDITOR BÊN PHẢI */
         .editor-zone {
             flex: 1;
             display: flex;
@@ -192,22 +171,9 @@
             background-color: var(--editor-bg);
             overflow: hidden;
             position: relative;
-            margin-left: 260px;
-            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .sidebar.collapsed + .editor-zone {
-            margin-left: 0;
         }
 
-        /* LỚP PHỦ KHÓA CODE VÀ ĐÓNG MENU KHI CHẠM RA NGOÀI */
-        .editor-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.2);
-            z-index: 90;
-            display: none;
-        }
-
+        /* 3. KHOẢNG TRỐNG TRÊN ĐẦU CHỨA CÁC FILE ĐANG MỞ */
         .tabs-bar {
             height: 38px;
             background-color: var(--tab-inactive);
@@ -247,7 +213,7 @@
             width: 100%; height: 100%;
         }
 
-        /* CONTEXT MENU TỆP TIN */
+        /* MENU TÙY CHỌN CHO TỪNG FILE ĐỘC LẬP (ẢNH 3) */
         .file-context-menu {
             position: absolute;
             background-color: #111625;
@@ -257,7 +223,7 @@
             display: none;
             flex-direction: column;
             width: 160px;
-            z-index: 150;
+            z-index: 999;
             padding: 4px 0;
         }
         .context-menu-item {
@@ -274,14 +240,14 @@
             color: white;
         }
 
-        /* CONTEXT MENU GÕ CODE */
+        /* POPUP MENU KHI CHẠM GIỮ CODE */
         .custom-context-menu {
             position: absolute;
             background-color: #1e293b;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             display: none;
-            z-index: 120;
+            z-index: 1000;
             padding: 4px;
         }
         .menu-btn {
@@ -290,13 +256,13 @@
         }
         .menu-btn:hover { background-color: var(--accent-color); }
 
-        /* GIAO DIỆN CHẠY KẾT QUẢ SẠCH TRẮNG NGUYÊN BẢN */
+        /* PANEL HIỂN THỊ CHẠY KẾT QUẢ KHÔNG REFRESH TRANG (ẢNH 2) */
         .output-panel {
             position: absolute;
             top: 0; right: -100%;
             width: 100%; height: 100%;
-            background-color: #ffffff; z-index: 200;
-            transition: right 0.28s cubic-bezier(0.1, 0.9, 0.2, 1);
+            background-color: #000; z-index: 100;
+            transition: right 0.25s cubic-bezier(0.075, 0.82, 0.165, 1);
             display: flex; flex-direction: column;
         }
         .output-panel.open { right: 0; }
@@ -304,12 +270,12 @@
             height: 48px; background: var(--top-bar-bg);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 16px; border-bottom: 1px solid var(--border-color);
-            color: #fff;
         }
-        .output-body { flex: 1; position: relative; background-color: #ffffff; }
-        #preview-iframe { width: 100%; height: 100%; border: none; background: #ffffff; }
-        #terminal-box { width: 100%; height: 100%; padding: 16px; font-family: monospace; color: #00ff00; background: #000000; overflow-y: auto; white-space: pre-wrap; display: none; }
+        .output-body { flex: 1; position: relative; background-color: #fff; }
+        #preview-iframe { width: 100%; height: 100%; border: none; background: #fff; }
+        #terminal-box { width: 100%; height: 100%; padding: 16px; font-family: monospace; color: #00ff00; background: #000; overflow-y: auto; white-space: pre-wrap; display: none; }
 
+        /* TRẠNG THÁI TRỐNG CHƯA CÓ FILE */
         .empty-screen-msg {
             position: absolute;
             top: 50%; left: 50%;
@@ -334,7 +300,7 @@
                 <i class="fa-solid fa-code nav-icon"></i>
             </div>
             <div class="nav-right">
-                <i class="fa-solid fa-file-zipper nav-icon" id="btn-export-project" title="Export Project (ZIP)"></i>
+                <i class="fa-solid fa-file-zipper nav-icon" id="btn-export-project" title="Xuất toàn bộ Project (ZIP)"></i>
                 <i class="fa-solid fa-play btn-run" id="btn-run-code"></i>
             </div>
         </div>
@@ -344,22 +310,21 @@
                 <div class="sidebar-header">
                     <span>FILES</span>
                     <div class="file-actions">
-                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger" title="Tạo file"></i>
-                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger" title="Tạo thư mục"></i>
+                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger"></i>
+                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger"></i>
                     </div>
                 </div>
+                
                 <div class="file-tree" id="file-tree-container"></div>
             </div>
 
-            <div class="editor-zone" id="editor-zone-block">
-                <div class="editor-overlay" id="click-outside-overlay"></div>
-
+            <div class="editor-zone">
                 <div class="tabs-bar" id="tabs-container"></div>
 
                 <div class="editor-container-wrapper">
                     <div id="editor-container"></div>
                     <div class="empty-screen-msg" id="empty-msg">
-                        Không có file nào đang mở.<br>Hãy nhấn biểu tượng tạo file bên trái để bắt đầu lập trình.
+                        Không có file nào đang mở.<br>Hãy nhấn biểu tượng tạo file bên trái để bắt đầu.
                     </div>
                 </div>
 
@@ -372,7 +337,7 @@
 
             <div class="output-panel" id="output-screen">
                 <div class="output-header">
-                    <span id="output-type" style="font-weight: 500;">Live Preview</span>
+                    <span id="output-type">Live Preview</span>
                     <button style="background:none; border:none; color:white; font-size:14px; cursor:pointer;" id="btn-close-output">✕ ĐÓNG</button>
                 </div>
                 <div class="output-body">
@@ -391,20 +356,13 @@
 
     <script>
         let editor;
-        
-        // CẤU TRÚC ĐỐI TƯỢNG FILE GỐC (HOÀN TOÀN TRỐNG ĐỂ TỰ DO KHỞI TẠO)
-        let projectFileSystem = {
-            type: 'folder',
-            name: 'root',
-            children: {}
-        };
+        let filesData = {}; // KHỞI TẠO TRỐNG HOÀN TOÀN THEO YÊU CẦU CỦA BẠN
+        let openedTabs = [];
+        let activeFile = null;
+        let targetMenuFile = null; // Ghi nhớ file đang tương tác trên Menu ba chấm
+        let virtualFolderStr = ""; // Lưu tên thư mục ảo nếu người dùng tạo
 
-        let openedTabs = []; 
-        let activeFilePath = null; // Đường dẫn dạng chuỗi phân tách bởi dấu gạch chéo xuôi '/'
-        let selectedTargetId = null; // Lưu thư mục đang được chọn để tạo tệp tin con lồng nhau
-        let targetMenuPath = null;
-
-        const langMapping = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'java': 'java', 'php': 'php', 'swift': 'swift' };
+        const langMapping = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'java': 'java', 'php': 'php' };
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
         require(['vs/editor/editor.main'], function() {
@@ -422,35 +380,17 @@
             setupLongPressMenu();
         });
 
-        // ĐÓNG MỞ SIDEBAR CHẶN CODE VÀ CHẠM NGOÀI TỰ ĐỘNG THU GỌN
-        const sidebar = document.getElementById('sidebar-menu');
-        const overlay = document.getElementById('click-outside-overlay');
-
-        function toggleSidebar(open) {
-            if (open) {
-                sidebar.classList.remove('collapsed');
-                overlay.style.display = 'block'; // Khóa tương tác vùng viết code
-            } else {
-                sidebar.classList.add('collapsed');
-                overlay.style.display = 'none'; // Tháo khóa, cho gõ code bình thường
-            }
+        // TÍNH NĂNG 1: ẨN/HIỆN SIDEBAR GIỮ FULL MÀN HÌNH KHÔNG VỠ KHUNG
+        document.getElementById('btn-toggle-menu').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar-menu');
+            sidebar.classList.toggle('collapsed');
             setTimeout(() => { if(editor) editor.layout(); }, 260);
-        }
-
-        document.getElementById('btn-toggle-menu').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isOpen = !sidebar.classList.contains('collapsed');
-            toggleSidebar(!isOpen);
         });
 
-        // Ấn vào vùng trống bất kỳ nằm ngoài bảng điều khiển là tự động đóng
-        overlay.addEventListener('click', function() {
-            toggleSidebar(false);
-        });
-
+        // ĐIỀU CHỈNH TRẠNG THÁI HIỂN THỊ EDITOR KHI CHƯA CÓ FILE
         function updateEditorVisibility() {
             const msg = document.getElementById('empty-msg');
-            if(!activeFilePath) {
+            if(!activeFile) {
                 msg.style.display = 'block';
                 if(editor) editor.getContainerNode().style.opacity = '0';
             } else {
@@ -459,357 +399,212 @@
             }
         }
 
-        // ĐIỀU HƯỚNG TÌM ĐỐI TƯỢNG THEO ĐƯỜNG DẪN MẠNG LƯỚI TỰ DO
-        function getNodeByPath(pathStr) {
-            if (!pathStr) return null;
-            const parts = pathStr.split('/');
-            let current = projectFileSystem;
-            for (let part of parts) {
-                if (current && current.children && current.children[part]) {
-                    current = current.children[part];
-                } else {
-                    return null;
-                }
-            }
-            return current;
-        }
+        // TẠO FILE MỚI ĐỘNG KHÔNG LỖI LOGIC
+        document.getElementById('new-file-trigger').addEventListener('click', function() {
+            const name = prompt("Nhập tên file mới kèm đuôi mở rộng (Ví dụ: index.html, babs.java):");
+            if(!name) return;
+            if(filesData[name] !== undefined) return alert("File này đã tồn tại!");
 
-        // TẠO FILE MỚI LỒNG NHAU THEO THƯ MỤC ĐANG CHỌN TỐI ƯU CỦA SPCK
-        document.getElementById('new-file-trigger').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const name = prompt("Nhập tên tệp tin mới (ví dụ: index.html, main.js):");
-            if (!name) return;
-
-            let parentNode = projectFileSystem;
-            let basePath = "";
-            
-            if (selectedTargetId) {
-                let targetNode = getNodeByPath(selectedTargetId);
-                if (targetNode && targetNode.type === 'folder') {
-                    parentNode = targetNode;
-                    basePath = selectedTargetId + "/";
-                }
-            }
-
-            if (parentNode.children[name]) {
-                alert("Tên tệp tin đã tồn tại trong thư mục này!");
-                return;
-            }
-
-            parentNode.children[name] = {
-                type: 'file',
-                name: name,
-                content: name.endsWith('.html') ? `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n</head>\n<body>\n  \n</body>\n</html>` : `// Mã nguồn ${name}\n`
-            };
-
-            const newPath = basePath + name;
+            filesData[name] = name.endsWith('.html') ? `\n<h1>Giao diện Spck</h1>` : `// Code cho file ${name}\n`;
             renderFileTree();
-            openFile(newPath);
+            openFile(name);
         });
 
-        // TẠO THƯ MỤC CON LỒNG NHAU KHÔNG GIỚI HẠN
-        document.getElementById('new-folder-trigger').addEventListener('click', function(e) {
-            e.stopPropagation();
-            const name = prompt("Nhập tên thư mục mới:");
-            if (!name) return;
-
-            let parentNode = projectFileSystem;
-            let basePath = "";
-
-            if (selectedTargetId) {
-                let targetNode = getNodeByPath(selectedTargetId);
-                if (targetNode && targetNode.type === 'folder') {
-                    parentNode = targetNode;
-                    basePath = selectedTargetId + "/";
-                }
-            }
-
-            if (parentNode.children[name]) {
-                alert("Thư mục đã tồn tại!");
-                return;
-            }
-
-            parentNode.children[name] = {
-                type: 'folder',
-                name: name,
-                children: {},
-                isOpen: true
-            };
-
+        // TẠO THƯ MỤC MỚI ĐỘNG
+        document.getElementById('new-folder-trigger').addEventListener('click', function() {
+            const folderName = prompt("Nhập tên thư mục mới:");
+            if(!folderName) return;
+            virtualFolderStr = folderName;
             renderFileTree();
         });
 
-        // DỰNG CÂY THƯ MỤC PHỨC HỢP ĐA TẦNG DỰA TRÊN ĐỆ QUY ĐỒNG BỘ CẤU TRÚC ĐỒ HỌA
+        // XỬ LÝ ĐỒNG BỘ CÂY THƯ MỤC LÊN GIAO DIỆN
         function renderFileTree() {
             const container = document.getElementById('file-tree-container');
             container.innerHTML = '';
 
-            function buildTreeHTML(node, currentPath, depth) {
-                let html = '';
-                Object.keys(node.children).sort().forEach(key => {
-                    const child = node.children[key];
-                    const thisPath = currentPath ? `${currentPath}/${key}` : key;
-                    const paddingLeft = depth * 16 + 12;
-
-                    if (child.type === 'folder') {
-                        const isSelected = thisPath === selectedTargetId ? 'selected-folder' : '';
-                        const folderIcon = child.isOpen ? 'fa-folder-open' : 'fa-folder';
-                        
-                        html += `
-                            <div class="tree-item ${isSelected}" style="padding-left: ${paddingLeft}px;" onclick="handleFolderClick(event, '${thisPath}')">
-                                <div class="tree-item-left">
-                                    <i class="fa-solid ${folderIcon} item-icon"></i>
-                                    <span style="font-weight: 500;">${child.name}</span>
-                                </div>
-                                <i class="fa-solid fa-ellipsis-vertical" onclick="triggerFileMenu(event, '${thisPath}')"></i>
-                            </div>
-                        `;
-                        
-                        if (child.isOpen) {
-                            html += buildTreeHTML(child, thisPath, depth + 1);
-                        }
-                    } else {
-                        const ext = child.name.split('.').pop().toLowerCase();
-                        let iconClass = "fa-solid fa-file-code";
-                        if(ext === 'html') iconClass = "fa-brands fa-html5";
-                        else if(ext === 'js') iconClass = "fa-brands fa-js";
-                        else if(ext === 'css') iconClass = "fa-brands fa-css3-alt";
-                        else if(ext === 'java') iconClass = "fa-brands fa-java";
-                        else if(ext === 'php') iconClass = "fa-brands fa-php";
-
-                        const isActive = thisPath === activeFilePath ? 'active' : '';
-
-                        html += `
-                            <div class="tree-item ${isActive}" style="padding-left: ${paddingLeft}px;" onclick="handleFileClick(event, '${thisPath}')">
-                                <div class="tree-item-left">
-                                    <i class="${iconClass} item-icon"></i>
-                                    <span>${child.name}</span>
-                                </div>
-                                <i class="fa-solid fa-ellipsis-vertical" onclick="triggerFileMenu(event, '${thisPath}')"></i>
-                            </div>
-                        `;
-                    }
-                });
-                return html;
+            // Nếu người dùng có tạo thư mục, render hàng thư mục cha lên trước
+            if(virtualFolderStr) {
+                const folderRow = document.createElement('div');
+                folderRow.className = "tree-item";
+                folderRow.innerHTML = `<div class="tree-item-left"><i class="fa-solid fa-folder item-icon"></i> <strong style="color:#f59e0b;">${virtualFolderStr}</strong></div>`;
+                container.appendChild(folderRow);
             }
 
-            container.innerHTML = buildTreeHTML(projectFileSystem, "", 0);
+            // Duyệt hiển thị danh sách file ảo
+            Object.keys(filesData).forEach(fileName => {
+                const ext = fileName.split('.').pop().toLowerCase();
+                let iconClass = "fa-solid fa-file-lines";
+                if(ext === 'html') iconClass = "fa-brands fa-html5";
+                else if(ext === 'js') iconClass = "fa-brands fa-js";
+                else if(ext === 'css') iconClass = "fa-brands fa-css3-alt";
+                else if(ext === 'java') iconClass = "fa-brands fa-java";
+                else if(ext === 'php') iconClass = "fa-brands fa-php";
+
+                const fileRow = document.createElement('div');
+                fileRow.className = `tree-item ${fileName === activeFile ? 'active' : ''}`;
+                
+                // Set thụt lề nếu có thư mục cha nhằm tạo cấu trúc hình cây ngăn nắp
+                if(virtualFolderStr) fileRow.style.paddingLeft = "28px";
+
+                fileRow.innerHTML = `
+                    <div class="tree-item-left" onclick="openFile('${fileName}')">
+                        <i class="${iconClass} item-icon"></i>
+                        <span>${fileName}</span>
+                    </div>
+                    <i class="fa-solid fa-ellipsis-vertical" onclick="triggerFileMenu(event, '${fileName}')"></i>
+                `;
+                container.appendChild(fileRow);
+            });
+
             updateEditorVisibility();
         }
 
-        function handleFolderClick(e, pathStr) {
-            e.stopPropagation();
-            let node = getNodeByPath(pathStr);
-            if (node) {
-                node.isOpen = !node.isOpen;
-                // Click chọn thư mục để đánh dấu tiêu điểm tạo file con lồng bên trong
-                selectedTargetId = (selectedTargetId === pathStr) ? null : pathStr;
-                renderFileTree();
-            }
-        }
-
-        function handleFileClick(e, pathStr) {
-            e.stopPropagation();
-            openFile(pathStr);
-        }
-
-        // THỰC THI MỞ FILE VÀ ĐỒNG BỘ HOÁ LÊN THANH TAB ĐẦU TRANG
-        function openFile(pathStr) {
-            if (activeFilePath && editor) {
-                let lastNode = getNodeByPath(activeFilePath);
-                if (lastNode) lastNode.content = editor.getValue();
+        // MỞ FILE VÀ THAY ĐỔI TAB TRÊN ĐẦU NHANH CHÓNG
+        function openFile(fileName) {
+            if(activeFile && editor) {
+                filesData[activeFile] = editor.getValue(); // Lưu lại tiến trình cũ trước khi nhảy tab
             }
 
-            activeFilePath = pathStr;
-            if (!openedTabs.includes(pathStr)) {
-                openedTabs.push(pathStr);
+            activeFile = fileName;
+            if(!openedTabs.includes(fileName)) {
+                openedTabs.push(fileName);
             }
 
-            let currentNode = getNodeByPath(pathStr);
-            if (currentNode) {
-                const ext = currentNode.name.split('.').pop().toLowerCase();
-                editor.setValue(currentNode.content);
-                monaco.editor.setModelLanguage(editor.getModel(), langMapping[ext] || 'plaintext');
-            }
+            const ext = fileName.split('.').pop().toLowerCase();
+            editor.setValue(filesData[fileName]);
+            monaco.editor.setModelLanguage(editor.getModel(), langMapping[ext] || 'plaintext');
 
             renderTabs();
             renderFileTree();
         }
 
+        // TÍNH NĂNG 2: VẼ VÀ ĐIỀU KHIỂN CÁC TÊN NGÔN NGỮ ĐANG MỞ TRÊN ĐẦU (TABS)
         function renderTabs() {
             const container = document.getElementById('tabs-container');
             container.innerHTML = '';
 
-            openedTabs.forEach(pathStr => {
-                const parts = pathStr.split('/');
-                const fileName = parts[parts.length - 1];
+            openedTabs.forEach(fileName => {
                 const tab = document.createElement('div');
-                tab.className = `tab-item ${pathStr === activeFilePath ? 'active' : ''}`;
+                tab.className = `tab-item ${fileName === activeFile ? 'active' : ''}`;
                 tab.innerHTML = `<span>${fileName}</span>`;
-                tab.onclick = () => openFile(pathStr);
+                tab.onclick = () => openFile(fileName);
                 container.appendChild(tab);
             });
         }
 
-        // GỌI BẢNG MENU BA CHẤM ĐỘC LẬP TỪNG TỆP TIN
-        function triggerFileMenu(e, pathStr) {
+        // TÍNH NĂNG 3: BẬT MENU BA CHẤM ĐỘC LẬP CHO TỪNG FILE (ẢNH 3)
+        function triggerFileMenu(e, fileName) {
             e.stopPropagation();
-            targetMenuPath = pathStr;
+            targetMenuFile = fileName;
             const menu = document.getElementById('file-interaction-menu');
             menu.style.display = 'flex';
             menu.style.left = (e.clientX - 140) + 'px';
             menu.style.top = e.clientY + 'px';
         }
 
+        // Tự tắt menu khi nhấn ra ngoài
         document.addEventListener('click', function() {
             document.getElementById('file-interaction-menu').style.display = 'none';
         });
 
-        // XỬ LÝ SỰ KIỆN CONTEXT MENU (EXPORT, RENAME, DELETE)
+        /* --- XỬ LÝ LOGIC TRÊN MENU ẢNH 3 --- */
+        // Xuất file đơn lẻ độc lập
         document.getElementById('opt-export-single').addEventListener('click', function() {
-            if (!targetMenuPath) return;
-            let node = getNodeByPath(targetMenuPath);
-            if (!node || node.type !== 'file') return alert("Chỉ hỗ trợ xuất file đơn lẻ!");
-            
-            const blob = new Blob([node.content], { type: 'text/plain' });
+            if(!targetMenuFile) return;
+            const blob = new Blob([filesData[targetMenuFile]], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = node.name;
+            a.download = targetMenuFile;
             a.click();
         });
 
+        // Đổi tên file (Rename)
         document.getElementById('opt-rename-file').addEventListener('click', function() {
-            if (!targetMenuPath) return;
-            let node = getNodeByPath(targetMenuPath);
-            if (!node) return;
+            if(!targetMenuFile) return;
+            const newName = prompt("Nhập tên mới cho file:", targetMenuFile);
+            if(!newName || newName === targetMenuFile) return;
 
-            const newName = prompt("Nhập tên mới:", node.name);
-            if (!newName || newName === node.name) return;
+            filesData[newName] = filesData[targetMenuFile];
+            delete filesData[targetMenuFile];
 
-            // Tiến hành cập nhật nút cấu trúc cây dữ liệu mẹ
-            const parts = targetMenuPath.split('/');
-            const oldName = parts.pop();
-            const parentPath = parts.join('/');
-            let parentNode = parentPath ? getNodeByPath(parentPath) : projectFileSystem;
-
-            if (parentNode.children[newName]) return alert("Tên này đã tồn tại!");
-
-            parentNode.children[newName] = parentNode.children[oldName];
-            parentNode.children[newName].name = newName;
-            delete parentNode.children[oldName];
-
-            const newPath = parentPath ? `${parentPath}/${newName}` : newName;
-
-            if (activeFilePath === targetMenuPath) activeFilePath = newPath;
-            let idx = openedTabs.indexOf(targetMenuPath);
-            if (idx !== -1) openedTabs[idx] = newPath;
-
-            if (selectedTargetId === targetMenuPath) selectedTargetId = newPath;
+            if(activeFile === targetMenuFile) activeFile = newName;
+            let idx = openedTabs.indexOf(targetMenuFile);
+            if(idx !== -1) openedTabs[idx] = newName;
 
             renderFileTree();
             renderTabs();
         });
 
+        // Xóa file (Delete)
         document.getElementById('opt-delete-file').addEventListener('click', function() {
-            if (!targetMenuPath || !confirm("Bạn có chắc chắn muốn xóa mục này không?")) return;
+            if(!targetMenuFile || !confirm(`Xác nhận xóa tệp tin ${targetMenuFile}?`)) return;
 
-            const parts = targetMenuPath.split('/');
-            const oldName = parts.pop();
-            const parentPath = parts.join('/');
-            let parentNode = parentPath ? getNodeByPath(parentPath) : projectFileSystem;
+            delete filesData[targetMenuFile];
+            openedTabs = openedTabs.filter(t => t !== targetMenuFile);
 
-            delete parentNode.children[oldName];
-
-            // Dọn sạch mảng trạng thái lưu trữ tab đang mở
-            openedTabs = openedTabs.filter(t => !t.startsWith(targetMenuPath));
-            
-            if (activeFilePath && activeFilePath.startsWith(targetMenuPath)) {
-                activeFilePath = openedTabs.length > 0 ? openedTabs[0] : null;
-            }
-            if (selectedTargetId && selectedTargetId.startsWith(targetMenuPath)) {
-                selectedTargetId = null;
+            if(activeFile === targetMenuFile) {
+                activeFile = openedTabs.length > 0 ? openedTabs[0] : null;
             }
 
-            if (activeFilePath) openFile(activeFilePath);
+            if(activeFile) openFile(activeFile);
             else {
                 renderFileTree();
                 renderTabs();
             }
         });
 
-        // XUẤT NÉN ZIP TOÀN BỘ PROJECT LỒNG NHAU ĐA CẤP
+        // XUẤT TOÀN BỘ PROJECT THƯ MỤC NÉN ĐẶT TÊN TÙY CHỈNH (ZIP)
         document.getElementById('btn-export-project').addEventListener('click', function() {
-            if (Object.keys(projectFileSystem.children).length === 0) return alert("Không có tệp tin nào để đóng gói xuất khẩu!");
+            if(Object.keys(filesData).length === 0) return alert("Thư mục rỗng, chưa có file nào để xuất!");
             
-            const rootName = prompt("Nhập tên dự án để xuất gói ZIP:", "SpckProjectAI");
-            if (!rootName) return;
+            const folderName = prompt("Nhập tên cho thư mục tổng của Project để xuất gói ZIP:", "MyProjectAI");
+            if(!folderName) return;
 
             const zip = new JSZip();
-
-            function addToZip(node, currentZipFolder) {
-                Object.keys(node.children).forEach(key => {
-                    const child = node.children[key];
-                    if (child.type === 'folder') {
-                        const newZipFolder = currentZipFolder.folder(child.name);
-                        addToZip(child, newZipFolder);
-                    } else {
-                        currentZipFolder.file(child.name, child.content);
-                    }
-                });
-            }
-
-            const mainProjectFolder = zip.folder(rootName);
-            addToZip(projectFileSystem, mainProjectFolder);
+            Object.keys(filesData).forEach(fileName => {
+                // Đóng gói cấu trúc toàn bộ tệp tin vào trong thư mục mang tên người dùng đặt
+                zip.file(`${folderName}/${fileName}`, filesData[fileName]);
+            });
 
             zip.generateAsync({ type: 'blob' }).then(function(content) {
                 const url = URL.createObjectURL(content);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${rootName}.zip`;
+                a.download = `${folderName}.zip`;
                 a.click();
             });
         });
 
-        // GIAO DIỆN CHẠY CODE TRẮNG SẠCH SẼ - KHÔNG CHỨA BẤT CỨ MÃ CỐ ĐỊNH NÀO
+        // TÍNH NĂNG CHẠY CODE TRƯỢT MÀN HÌNH TẠI CHỖ (ẢNH 2)
         document.getElementById('btn-run-code').addEventListener('click', async function() {
-            if (!activeFilePath) return alert("Vui lòng mở một file để chạy chương trình!");
+            if(!activeFile) return alert("Vui lòng tạo hoặc mở một file để chạy!");
 
-            if (editor) {
-                let currentNode = getNodeByPath(activeFilePath);
-                if (currentNode) currentNode.content = editor.getValue();
-            }
+            if(editor) filesData[activeFile] = editor.getValue();
 
             const panel = document.getElementById('output-screen');
             const iframe = document.getElementById('preview-iframe');
             const terminal = document.getElementById('terminal-box');
             const typeText = document.getElementById('output-type');
-            
-            let activeNode = getNodeByPath(activeFilePath);
 
             panel.classList.add('open');
 
-            if (activeNode.name.endsWith('.html')) {
+            if(activeFile.endsWith('.html')) {
                 typeText.innerText = "Browser Preview (HTML)";
                 iframe.style.display = "block";
                 terminal.style.display = "none";
-                
-                // Trả về vùng trắng nguyên bản sạch sẽ và nạp mã code trực tiếp
-                iframe.srcdoc = ""; 
-                setTimeout(() => {
-                    iframe.srcdoc = activeNode.content;
-                }, 10);
+                iframe.srcdoc = filesData[activeFile];
             } else {
                 typeText.innerText = "Console Terminal Output";
                 iframe.style.display = "none";
                 terminal.style.display = "block";
-                terminal.innerText = ">>> Đang thực thi biên dịch trực tuyến...\n";
+                terminal.innerText = ">>> Đang kết nối máy chủ biên dịch trực tuyến thực thi...\n";
 
-                let ext = activeNode.name.split('.').pop().toLowerCase();
                 let apiLang = "py"; let apiVer = "3.10.0";
-                if(ext === 'js') { apiLang = "js"; apiVer = "18.15.0"; }
-                if(ext === 'java') { apiLang = "java"; apiVer = "15.0.2"; }
-                if(ext === 'php') { apiLang = "php"; apiVer = "8.2.3"; }
+                if(activeFile.endsWith('.js')) { apiLang = "js"; apiVer = "18.15.0"; }
+                if(activeFile.endsWith('.java')) { apiLang = "java"; apiVer = "15.0.2"; }
+                if(activeFile.endsWith('.php')) { apiLang = "php"; apiVer = "8.2.3"; }
 
                 try {
                     const res = await fetch('https://emkc.org/api/v2/piston/execute', {
@@ -817,15 +612,15 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             language: apiLang, version: apiVer,
-                            files: [{ content: activeNode.content }]
+                            files: [{ content: filesData[activeFile] }]
                         })
                     });
                     const data = await res.json();
                     if(data.run) {
-                        terminal.innerText = data.run.stderr ? `[Lỗi hệ thống]:\n${data.run.stderr}` : data.run.stdout;
+                        terminal.innerText = data.run.stderr ? `[Lỗi cú pháp chương trình]:\n${data.run.stderr}` : data.run.stdout;
                     }
                 } catch(e) {
-                    terminal.innerText = "Lỗi kết nối máy chủ Cloud.";
+                    terminal.innerText = "Lỗi đường truyền hệ thống.";
                 }
             }
         });
@@ -834,7 +629,7 @@
             document.getElementById('output-screen').classList.remove('open');
         });
 
-        // POPUP PHỤ TRỢ (SELECT ALL, COPY, PASTE)
+        // CHẠM GIỮ / RIGHT CLICK TRÊN CODE ĐỂ COPY VÀ PASTE NHANH CHÓNG
         function setupLongPressMenu() {
             const area = document.getElementById('editor-container');
             const popup = document.getElementById('context-popup');
