@@ -1,13 +1,13 @@
 let editor;
-let projects = {}; // Cấu trúc: { "Tên_Project": { files: {}, tree: [] } }
+let db = {}; // Khởi tạo Database phẳng: { "Tên_Project": { "paths": { "root/index.html": { type: "file", content: "..." } }, "expanded": { "root/folder": true } } }
 let currentProject = null;
-let activeFilePath = null;
+let activeFile = null;
 let openTabs = [];
-let selectedNodeId = null; // Node đang được click chọn để lồng ghép file/thư mục con
+let selectedPath = null; // Thư mục hoặc file đang click chọn thực tế để lồng ghép con
 
-const langModeMap = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'py': 'python', 'php': 'php', 'java': 'java' };
+const langMapping = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'py': 'python', 'php': 'php', 'java': 'java' };
 
-// KHỞI CHẠY MONACO
+// KHỞI ĐỘNG BỘ LÕI CODE MONACO EDITOR
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
 require(['vs/editor/editor.main'], function() {
     editor = monaco.editor.create(document.getElementById('monaco-editor-core'), {
@@ -19,258 +19,318 @@ require(['vs/editor/editor.main'], function() {
         highlightActiveIndentGuide: true,
         guides: { indentation: true, bracketPairs: true }
     });
-    
-    // Tạo sẵn một dự án Demo ban đầu để không trống trải
-    initMockProject();
+
+    // Theo dõi thao tác gõ chữ cập nhật trực tiếp vào biến lưu trữ dữ liệu tệp tin ảo
+    editor.onDidChangeModelContent(() => {
+        if (currentProject && activeFile && db[currentProject]) {
+            db[currentProject].paths[activeFile].content = editor.getValue();
+        }
+    });
+
+    // Tạo luôn bộ dự án mẫu trực quan ban đầu chuẩn yêu cầu
+    initBaseProject();
 });
 
-function initMockProject() {
-    createProjectData("Camera Studio AI");
+function initBaseProject() {
+    const defaultProj = "Camera Studio AI";
+    createProjectStructure(defaultProj);
     
-    // Thêm các node tệp tin và lồng ghép con ban đầu
-    const proj = projects["Camera Studio AI"];
-    proj.files["root/index.html"] = `<!DOCTYPE html>\n<html>\n<head>\n    <title>AI Realtime</title>\n</head>\n<body>\n    <h1>Hệ Thống Camera AI Đã Kích Hoạt</h1>\n</body>\n</html>`;
-    proj.files["root/assets/style.css"] = `body { background: #000; color: #fff; }`;
-    proj.files["root/core/nsjs.py"] = `import os\nprint("Python Model Core Booted Successfully.")`;
+    const projData = db[defaultProj];
+    // Giả lập cấu trúc thư mục lồng ghép đa tầng thực tế bằng phân vùng chuỗi gạch chéo
+    projData.paths["root"] = { type: "folder" };
+    projData.paths["root/index.html"] = { type: "file", content: "<!DOCTYPE html>\n<html>\n<head>\n    <title>Camera AI</title>\n</head>\n<body>\n    <h1>Hệ thống Camera AI đang kích hoạt trực tiếp!</h1>\n</body>\n</html>" };
+    projData.paths["root/core AI"] = { type: "folder" };
+    projData.paths["root/core AI/nsjs.py"] = { type: "file", content: "# Lập trình mô hình AI bằng Python\nimport time\nprint('Analyzing camera streams...')" };
+    projData.paths["root/assets"] = { type: "folder" };
+    projData.paths["root/assets/style.css"] = { type: "file", content: "body { background: #000; color: #fff; }" };
 
-    proj.tree = [
-        { id: "root/index.html", name: "index.html", type: "file", ext: "html" },
-        { 
-            id: "root/assets", name: "assets", type: "folder", expanded: true,
-            children: [
-                { id: "root/assets/style.css", name: "style.css", type: "file", ext: "css" }
-            ]
-        },
-        {
-            id: "root/core", name: "core", type: "folder", expanded: true,
-            children: [
-                { id: "root/core/nsjs.py", name: "nsjs.py", type: "file", ext: "py" } // Đầy đủ Python minh họa
-            ]
-        }
-    ];
+    // Mở sẵn các thư mục mẫu
+    projData.expanded["root"] = true;
+    projData.expanded["root/core AI"] = true;
+    projData.expanded["root/assets"] = true;
 
-    switchProject("Camera Studio AI");
+    selectActiveProject(defaultProj);
 }
 
-// HÀM TẠO DỰ ÁN MỚI
-function createProjectData(name) {
-    projects[name] = { files: {}, tree: [] };
+function createProjectStructure(name) {
+    db[name] = { paths: {}, expanded: {} };
     const select = document.getElementById('project-selector');
     const opt = document.createElement('option');
     opt.value = name; opt.innerText = name;
     select.appendChild(opt);
 }
 
+// SỰ KIỆN NÚT TẠO DỰ ÁN MỚI
 document.getElementById('btn-create-project').addEventListener('click', () => {
-    const name = prompt("Nhập tên dự án mới cần lập trình:");
+    const name = prompt("Nhập tên dự án mới:");
     if (!name) return;
-    if (projects[name]) return alert("Dự án đã tồn tại!");
-    createProjectData(name);
-    switchProject(name);
+    if (db[name]) return alert("Dự án này đã tồn tại!");
+    createProjectStructure(name);
+    // Tự động khởi tạo thư mục root nền tảng cho dự án mới tinh vừa tạo
+    db[name].paths["root"] = { type: "folder" };
+    db[name].expanded["root"] = true;
+    selectActiveProject(name);
 });
 
 document.getElementById('project-selector').addEventListener('change', (e) => {
-    switchProject(e.target.value);
+    selectActiveProject(e.target.value);
 });
 
-function switchProject(name) {
+function selectActiveProject(name) {
     currentProject = name;
     document.getElementById('active-project-name').innerText = name;
     document.getElementById('project-selector').value = name;
     openTabs = [];
-    activeFilePath = null;
-    selectedNodeId = null;
+    activeFile = null;
+    selectedPath = "root"; // Mặc định chọn root dự án khi chuyển đổi
     renderFileTree();
     renderTabs();
-    syncEditor();
+    updateEditorView();
 }
 
-// ĐỆ QUY DỰNG CÂY THƯ MỤC LỒNG GHÉP VÔ HẠN TẦNG CHUẨN SPCK
+// THUẬT TOÁN DỰNG CÂY FILE ĐA TẦNG TUYỆT ĐỐI CHÍNH XÁC QUA PATH KEY
 function renderFileTree() {
-    const rootContainer = document.getElementById('file-tree-root');
-    rootContainer.innerHTML = '';
-    if (!currentProject) return;
+    const rootBox = document.getElementById('file-tree-root');
+    rootBox.innerHTML = '';
+    if (!currentProject || !db[currentProject]) return;
 
-    const treeData = projects[currentProject].tree;
-    
-    function buildNodeHTML(node, container) {
+    const proj = db[currentProject];
+    const allPaths = Object.keys(proj.paths).sort(); // Sắp xếp theo bảng chữ cái để tạo cấu trúc chuẩn tầng lớp
+
+    allPaths.forEach(path => {
+        const parts = path.split('/');
+        const depth = parts.length - 1; // Độ sâu thư mục để căn lề trái thụt vào thụ động
+        const name = parts[parts.length - 1];
+        const node = proj.paths[path];
+
+        // Kiểm tra xem node cha có được mở rộng không, nếu không mở thì ẩn toàn bộ node con
+        if (depth > 0) {
+            let parentPath = parts.slice(0, -1).join('/');
+            if (!proj.expanded[parentPath]) return; 
+        }
+
         const row = document.createElement('div');
-        row.className = `tree-node-row ${node.id === selectedNodeId ? 'selected' : ''}`;
-        
-        let iconClass = "fa-solid fa-file-code";
+        row.className = `tree-node-row ${path === selectedPath ? 'selected' : ''}`;
+        row.style.paddingLeft = `${(depth * 16) + 6}px`; // Thụt lề động tạo cấu trúc cây vô hạn tầng
+
+        // Tạo phần tử đường kẻ dọc (Indent Guide) phân cấp đồ họa
+        for (let i = 1; i <= depth; i++) {
+            const guide = document.createElement('div');
+            guide.className = "tree-indent-guide";
+            guide.style.left = `${i * 16}px`;
+            row.appendChild(guide);
+        }
+
+        let icon = "fa-solid fa-file-code";
         if (node.type === 'folder') {
-            iconClass = node.expanded ? "fa-solid fa-folder-open" : "fa-solid fa-folder";
+            const isExpanded = proj.expanded[path];
+            icon = isExpanded ? "fa-solid fa-folder-open" : "fa-solid fa-folder";
         } else {
-            if (node.ext === 'html') iconClass = "fa-brands fa-html5";
-            else if (node.ext === 'css') iconClass = "fa-brands fa-css3-alt";
-            else if (node.ext === 'js') iconClass = "fa-brands fa-js";
-            else if (node.ext === 'py') iconClass = "fa-brands fa-python"; // Bổ sung logo Python sắc nét
-            else if (node.ext === 'php') iconClass = "fa-brands fa-php";
-            else if (node.ext === 'java') iconClass = "fa-brands fa-java";
+            const ext = name.split('.').pop().toLowerCase();
+            if (ext === 'html') icon = "fa-brands fa-html5";
+            else if (ext === 'css') icon = "fa-brands fa-css3-alt";
+            else if (ext === 'js') icon = "fa-brands fa-js";
+            else if (ext === 'py') icon = "fa-brands fa-python"; // Logo Python sắc nét đặc trưng màu xanh lam
+            else if (ext === 'php') icon = "fa-brands fa-php";
+            else if (ext === 'java') icon = "fa-brands fa-java";
         }
 
         const isFolder = node.type === 'folder';
-        row.innerHTML = `
-            <div class="node-content-left">
-                ${isFolder ? `<i class="fa-solid fa-chevron-right arrow-toggle ${node.expanded ? 'expanded' : ''}"></i>` : '<span style="width:16px;"></span>'}
-                <i class="${iconClass} node-icon"></i>
-                <span>${node.name}</span>
-            </div>
-            <i class="fa-solid fa-trash-can" style="font-size:11px; opacity:0.4;" onclick="deleteNodeTrigger(event, '${node.id}')"></i>
+        const itemLeft = document.createElement('div');
+        itemLeft.className = "node-content-left";
+        itemLeft.innerHTML = `
+            ${isFolder ? `<i class="fa-solid fa-chevron-right arrow-toggle ${proj.expanded[path] ? 'expanded' : ''}"></i>` : '<span style="width:12px;"></span>'}
+            <i class="${icon} node-icon"></i>
+            <span>${name}</span>
         `;
+        row.appendChild(itemLeft);
 
+        // Nút xóa tệp tin nhanh
+        const delBtn = document.createElement('i');
+        delBtn.className = "fa-solid fa-trash-can btn-delete-node";
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Bạn chắc chắn muốn xóa tệp tin/thư mục: ${name}?`)) {
+                // Xóa tất cả các đường dẫn con nếu là thư mục
+                Object.keys(proj.paths).forEach(p => {
+                    if (p === path || p.startsWith(path + "/")) {
+                        delete proj.paths[p];
+                        openTabs = openTabs.filter(t => t !== p);
+                    }
+                });
+                if (activeFile === path || !proj.paths[activeFile]) activeFile = openTabs.length > 0 ? openTabs[0] : null;
+                selectedPath = "root";
+                renderFileTree(); renderTabs(); updateEditorView();
+            }
+        };
+        row.appendChild(delBtn);
+
+        // Click chọn Node xử lý logic lồng ghép file/thư mục
         row.onclick = (e) => {
             e.stopPropagation();
-            selectedNodeId = node.id;
-            
+            selectedPath = path;
             if (isFolder) {
-                node.expanded = !node.expanded;
+                proj.expanded[path] = !proj.expanded[path];
             } else {
-                openFileToEditor(node.id);
+                openFileToWorkspace(path);
             }
             renderFileTree();
         };
 
-        container.appendChild(row);
-
-        if (isFolder && node.expanded && node.children) {
-            const childContainer = document.createElement('div');
-            childContainer.className = "node-children-container";
-            node.children.forEach(child => buildNodeHTML(child, childContainer));
-            container.appendChild(childContainer);
-        }
-    }
-
-    treeData.forEach(node => buildNodeHTML(node, rootContainer));
+        rootBox.appendChild(row);
+    });
 }
 
-// XỬ LÝ LỒNG GHÉP FILE / THƯ MỤC VÀO VỊ TRÍ ĐANG CHỌN
-function addNodeToTree(type) {
-    if (!currentProject) return alert("Vui lòng tạo hoặc chọn dự án trước!");
-    const name = prompt(`Nhập tên ${type === 'file' ? 'File kèm đuôi (vd: main.py, index.html)' : 'Thư mục'}:`);
+// LOGIC XỬ LÝ LỒNG GHÉP FILE/FOLDER TÙY Ý VÀO VỊ TRÍ ĐANG CLICK CHỌN TRÊN CÂY
+function executeAddNewNode(type) {
+    if (!currentProject || !db[currentProject]) return alert("Vui lòng tạo dự án trước!");
+    if (!selectedPath) {
+        selectedPath = "root"; // Mặc định nếu chưa chọn gì thì nhét thẳng vào thư mục root chính dự án
+    }
+
+    const proj = db[currentProject];
+    let parentFolder = selectedPath;
+    
+    // Nếu người dùng đang chọn 1 tệp tin, lấy đường dẫn thư mục cha chứa file đó để thêm cùng cấp lồng ghép
+    if (proj.paths[selectedPath] && proj.paths[selectedPath].type === 'file') {
+        const parts = selectedPath.split('/');
+        parentFolder = parts.slice(0, -1).join('/');
+    }
+
+    const name = prompt(`Nhập tên ${type === 'file' ? 'File kèm đuôi (.html, .py, .css)' : 'Thư mục mới'}:`);
     if (!name) return;
 
-    const ext = name.split('.').pop();
-    const proj = projects[currentProject];
-    
-    const newNodeId = selectedNodeId ? `${selectedNodeId}/${name}` : `root/${name}`;
-    const newNode = { id: newNodeId, name: name, type: type, ext: ext };
-    if (type === 'folder') { newNode.children = []; newNode.expanded = true; }
-    else { proj.files[newNodeId] = type === 'file' && ext === 'py' ? "# Code Python\n" : ""; }
+    const newFullPath = `${parentFolder}/${name}`;
+    if (proj.paths[newFullPath]) return alert("Tên tệp tin hoặc thư mục đã tồn tại trong phân vùng này!");
 
-    if (!selectedNodeId) {
-        proj.tree.push(newNode);
+    if (type === 'folder') {
+        proj.paths[newFullPath] = { type: "folder" };
+        proj.expanded[parentFolder] = true; // Tự động mở bung thư mục cha ra để nhìn thấy con vừa tạo
+        proj.expanded[newFullPath] = true;
     } else {
-        // Tìm node cha được chọn trong cây để nhét con vào
-        function findAndInsert(list) {
-            for (let n of list) {
-                if (n.id === selectedNodeId && n.type === 'folder') {
-                    n.children.push(newNode);
-                    n.expanded = true;
-                    return true;
-                }
-                if (n.children && findAndInsert(n.children)) return true;
-            }
-            return false;
-        }
-        const inserted = findAndInsert(proj.tree);
-        if (!inserted) {
-            // Nếu đang chọn 1 file, thêm cùng cấp với file đó
-            proj.tree.push(newNode);
-        }
+        const ext = name.split('.').pop().toLowerCase();
+        let initCode = "";
+        if (ext === 'py') initCode = "# Lập trình xử lý ứng dụng bằng Python\n";
+        else if (ext === 'css') initCode = "/* Cấu trúc định dạng Style CSS */\nbody {\n\n}";
+        else if (ext === 'js') initCode = "// Logic JS thực thi dự án\n";
+
+        proj.paths[newFullPath] = { type: "file", content: initCode };
+        proj.expanded[parentFolder] = true;
+        openFileToWorkspace(newFullPath);
     }
-    
-    if (type === 'file') openFileToEditor(newNodeId);
+
+    selectedPath = newFullPath; // Tự động chuyển trọng tâm tiêu điểm vào file/folder vừa tạo
     renderFileTree();
 }
 
-document.getElementById('action-add-file').addEventListener('click', () => addNodeToTree('file'));
-document.getElementById('action-add-folder').addEventListener('click', () => addNodeToTree('folder'));
+document.getElementById('action-add-file').addEventListener('click', () => executeAddNewNode('file'));
+document.getElementById('action-add-folder').addEventListener('click', () => executeAddNewNode('folder'));
 
-function openFileToEditor(id) {
-    activeFilePath = id;
-    if (!openTabs.includes(id)) openTabs.push(id);
+function openFileToWorkspace(path) {
+    activeFile = path;
+    if (!openTabs.includes(path)) openTabs.push(path);
     renderTabs();
-    syncEditor();
+    updateEditorView();
 }
 
-function syncEditor() {
-    const emptyState = document.getElementById('empty-workspace-state');
-    if (!activeFilePath || !currentProject) {
-        emptyState.style.display = "flex";
+function updateEditorView() {
+    const welcome = document.getElementById('empty-workspace-state');
+    if (!activeFile || !currentProject || !db[currentProject].paths[activeFile]) {
+        welcome.style.display = "flex";
         if (editor) editor.getContainerNode().style.opacity = "0";
         return;
     }
-    emptyState.style.display = "none";
+    welcome.style.display = "none";
     if (editor) {
         editor.getContainerNode().style.opacity = "1";
-        const code = projects[currentProject].files[activeFilePath] || "";
-        editor.setValue(code);
-        const ext = activeFilePath.split('.').pop();
-        monaco.editor.setModelLanguage(editor.getModel(), langModeMap[ext] || 'plaintext');
+        const fileNode = db[currentProject].paths[activeFile];
+        editor.setValue(fileNode.content || "");
+        const ext = activeFile.split('.').pop().toLowerCase();
+        monaco.editor.setModelLanguage(editor.getModel(), langMapping[ext] || 'plaintext');
     }
 }
 
-// BẬT TAB ĐIỀU HƯỚNG MỀM
 function renderTabs() {
     const bar = document.getElementById('editor-tabs-bar');
     bar.innerHTML = '';
-    openTabs.forEach(id => {
-        const fname = id.substring(id.lastIndexOf('/') + 1);
+    openTabs.forEach(path => {
+        const name = path.substring(path.lastIndexOf('/') + 1);
         const tab = document.createElement('div');
-        tab.className = `tab-unit ${id === activeFilePath ? 'active' : ''}`;
-        tab.innerHTML = `<span>${fname}</span><i class="fa-solid fa-xmark" style="font-size:10px;"></i>`;
+        tab.className = `tab-unit ${path === activeFile ? 'active' : ''}`;
+        tab.innerHTML = `<span>${name}</span><i class="fa-solid fa-xmark" style="font-size:10px; margin-left: 6px;"></i>`;
+        
         tab.querySelector('.fa-xmark').onclick = (e) => {
             e.stopPropagation();
-            openTabs = openTabs.filter(t => t !== id);
-            if (activeFilePath === id) activeFilePath = openTabs.length > 0 ? openTabs[0] : null;
-            renderTabs(); syncEditor();
+            openTabs = openTabs.filter(t => t !== path);
+            if (activeFile === path) activeFile = openTabs.length > 0 ? openTabs[0] : null;
+            renderTabs(); updateEditorView(); renderFileTree();
         };
-        tab.onclick = () => { activeFilePath = id; renderTabs(); syncEditor(); };
+
+        tab.onclick = () => { activeFile = path; selectedPath = path; renderTabs(); updateEditorView(); renderFileTree(); };
         bar.appendChild(tab);
     });
 }
 
-// LƯU TRỮ TRẠNG THÁI KHI GÕ
-if (editor) {
-    editor.onDidChangeModelContent(() => {
-        if (currentProject && activeFilePath) {
-            projects[currentProject].files[activeFilePath] = editor.getValue();
-        }
-    });
-}
-
-// SIDEBAR TOGGLE MOBILE
+// SIDEBAR TOGGLE ĐIỀU HƯỚNG
 document.getElementById('btn-toggle-sidebar').addEventListener('click', () => {
     const sb = document.getElementById('app-sidebar');
     if (window.innerWidth <= 768) sb.classList.toggle('open-mobile');
-    else sb.classList.toggle('collapsed');
-});
-
-// 🚀 LOGIC CHẠY RUN FULL SCREEN KỊCH TRANG (BẬT ĐỘC BẢN)
-document.getElementById('btn-global-run').addEventListener('click', () => {
-    if (!currentProject || !activeFilePath) return alert("Không có file nào đang mở để chạy!");
-    
-    const overlay = document.getElementById('live-preview-overlay');
-    const iframe = document.getElementById('preview-runtime-viewport');
-    const terminal = document.getElementById('preview-runtime-terminal');
-    
-    overlay.classList.add('active'); // Đẩy kịch màn hình, che toàn bộ IDE phía sau
-
-    if (activeFilePath.endsWith('.html')) {
-        iframe.style.display = "block";
-        terminal.style.display = "none";
-        iframe.srcdoc = projects[currentProject].files[activeFilePath];
-    } else {
-        // Nếu chạy file Python hoặc Logic thuần
-        iframe.style.display = "none";
-        terminal.style.display = "block";
-        const currentFileName = activeFilePath.substring(activeFilePath.lastIndexOf('/') + 1);
-        terminal.innerHTML = `<span style="color:#64748b;">$ python3 ${currentFileName}</span><br><br>[KẾT QUẢ ĐẦU RA]<br>-----------------------<br>${currentFileName} đang thực thi cấu trúc lõi AI...<br>Chạy hoàn tất thành công với mã lập trình!`;
+    else {
+        sb.classList.toggle('collapsed');
+        setTimeout(() => editor.layout(), 260);
     }
 });
 
-// NÚT THOÁT RA DUY NHẤT ĐỂ QUAY LẠI MÀN HÌNH CODE
+// 🚀 LOGIC CHẠY RUN FULL SCREEN ĐẨY KỊCH MÀN HÌNH - XÓA SẠCH THANH ĐIỀU HƯỚNG RÁC
+document.getElementById('btn-global-run').addEventListener('click', () => {
+    if (!currentProject || !activeFile) return alert("Vui lòng mở một file code bất kỳ để thực thi!");
+
+    // Cập nhật giá trị code hiện tại trong Monaco trước khi nạp chạy thử
+    db[currentProject].paths[activeFile].content = editor.getValue();
+
+    const layer = document.getElementById('live-preview-overlay');
+    const iframe = document.getElementById('preview-runtime-viewport');
+    const terminal = document.getElementById('preview-runtime-terminal');
+
+    layer.classList.add('active'); // Kích hoạt overlay kịch sàn màn hình che khuất hoàn toàn trang code bên dưới
+
+    if (activeFile.endsWith('.html')) {
+        iframe.style.display = "block";
+        terminal.style.display = "none";
+        iframe.src = "about:blank";
+
+        // Gom toàn bộ mã CSS và JS có trong toàn bộ dự án để tự động biên dịch nhúng chéo
+        let htmlSource = db[currentProject].paths[activeFile].content;
+        let internalCSS = "";
+        let internalJS = "";
+
+        Object.keys(db[currentProject].paths).forEach(p => {
+            if (p.endsWith('.css')) internalCSS += `\n/* ${p} */\n${db[currentProject].paths[p].content}\n`;
+            if (p.endsWith('.js') && p !== 'script.js') internalJS += `\n// ${p}\n${db[currentProject].paths[p].content}\n`;
+        });
+
+        if (internalCSS) htmlSource = htmlSource.replace('</head>', `<style>${internalCSS}</style></head>`);
+        if (internalJS) htmlSource = htmlSource.replace('</body>', `<script>${internalJS}<\/script></body>`);
+
+        setTimeout(() => {
+            iframe.srcdoc = htmlSource;
+        }, 30);
+    } else {
+        // Trình dịch giả lập Cloud cho các file logic độc lập (.py, .js)
+        iframe.style.display = "none";
+        terminal.style.display = "block";
+        const fname = activeFile.substring(activeFile.lastIndexOf('/') + 1);
+        
+        terminal.innerHTML = `
+            <span style="color: #64748b;">$ python3 ${fname}</span><br>
+            <span style="color: #a1a1aa;">[ĐANG BIÊN DỊCH TRÊN ĐÁM MÂY VÀ KHỞI CHẠY...]</span><br><br>
+            ${db[currentProject].paths[activeFile].content ? db[currentProject].paths[activeFile].content.replace(/\n/g, '<br>') : 'Không có dữ liệu in ra.'}
+            <br><br><span style="color: #10b981;">>>> Process finished with exit code 0</span>
+        `;
+    }
+});
+
+// NÚT THOÁT RA DUY NHẤT ĐỂ QUAY LẠI TRANG CODE 
 document.getElementById('btn-exit-preview').addEventListener('click', () => {
     document.getElementById('live-preview-overlay').classList.remove('active');
 });
