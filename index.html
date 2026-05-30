@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Web IDE Advance</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/hint/show-hint.min.css">
 
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f141c; color: #e1e4e8; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
+        
+        /* Header */
+        .header-bar { height: 50px; background: #161b22; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #21262d; z-index: 5; }
+        .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; }
+        .title { font-weight: bold; font-size: 15px; color: #f0f6fc; display: flex; align-items: center; gap: 6px; }
+        
+        /* Workspace */
+        .workspace { display: flex; flex: 1; position: relative; overflow: hidden; }
+        
+        /* Sidebar giống Spck (Hỗ trợ File & Thư mục) */
+        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #21262d; display: flex; flex-direction: column; position: absolute; left: -260px; top: 0; bottom: 0; z-index: 10; transition: 0.25s ease-in-out; }
+        .sidebar.open { left: 0; }
+        .sidebar-header { padding: 15px 12px; font-size: 12px; font-weight: bold; color: #8b949e; letter-spacing: 1px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-tools { display: flex; gap: 12px; }
+        .sidebar-tools button { background: none; border: none; color: #58a6ff; font-size: 16px; cursor: pointer; }
+        .file-list { padding: 8px; flex: 1; overflow-y: auto; }
+        
+        /* Giao diện cây thư mục & file kèm icon màu */
+        .tree-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; color: #c9d1d9; }
+        .tree-item:hover { background: #21262d; }
+        .tree-item.active { background: #1f242c; color: #58a6ff; border: 1px solid #30363d; }
+        .icon { width: 18px; text-align: center; display: inline-block; font-weight: bold; }
+        .indent { margin-left: 15px; }
+
+        /* Editor Area */
+        .editor-area { flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%; }
+        .tool-bar { background: #0f141c; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #21262d; }
+        select { background: #161b22; color: #fff; border: 1px solid #30363d; padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; }
+        .btn-group { display: flex; gap: 6px; }
+        .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; }
+        .btn-run { background: #238636; color: white; }
+        .btn-copy { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        .btn-share { background: #8957e5; color: white; }
+
+        /* CodeMirror config */
+        .CodeMirror { flex: 1; height: 100% !important; font-size: 14px; font-family: 'Fira Code', monospace; }
+        
+        /* Bàn phím ảo hỗ trợ ký tự đặc biệt ký hiệu cho Mobile */
+        .mobile-shortcuts { height: 42px; background: #161b22; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #21262d; overflow-x: auto; }
+        .shortcut-btn { color: #8b949e; background: none; border: none; font-size: 16px; font-weight: 500; padding: 4px 8px; cursor: pointer; }
+        .shortcut-btn:active { color: #fff; }
+
+        /* MÀN HÌNH RUN KẾT QUẢ CÓ NÚT BACK QUAY LẠI SỬA CODE */
+        .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 100; display: none; flex-direction: column; }
+        .preview-overlay.open { display: flex; }
+        .preview-header { height: 50px; background: #161b22; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #21262d; }
+        .btn-back { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .preview-body { flex: 1; width: 100%; border: none; background: #fff; }
+        .console-log-output { flex: 1; background: #0f141c; color: #00ff00; padding: 15px; font-family: monospace; overflow-y: auto; font-size: 14px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="title" id="current-file-title">🧡 index.html</div>
+        <button class="menu-btn" style="color: #238636;" onclick="runCode()">▶</button>
+    </div>
+
+    <div class="workspace">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span>PROJECT EXPLORER</span>
+                <div class="sidebar-tools">
+                    <button onclick="createNewFile()" title="Tạo File">📄+</button>
+                    <button onclick="createNewFolder()" title="Tạo Thư mục">📁+</button>
+                </div>
+            </div>
+            <div class="file-list" id="fileList">
+                </div>
+        </div>
+
+        <div class="editor-area">
+            <div class="tool-bar">
+                <select id="langSelect" onchange="changeLanguage()">
+                    <option value="htmlmixed">HTML / Web</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="python">Python 3</option>
+                    <option value="css">CSS</option>
+                    <option value="clike">C / C++ / Java</option>
+                </select>
+                <div class="btn-group">
+                    <button class="btn btn-copy" onclick="copyCode()">Copy</button>
+                    <button class="btn btn-share" onclick="shareRealtime()">🔗 Share IP</button>
+                    <button class="btn btn-run" onclick="runCode()">RUN</button>
+                </div>
+            </div>
+
+            <textarea id="code-editor"></textarea>
+        </div>
+    </div>
+
+    <div class="mobile-shortcuts">
+        <button class="shortcut-btn" onclick="insertChar('<')">&lt;</button>
+        <button class="shortcut-btn" onclick="insertChar('>')">&gt;</button>
+        <button class="shortcut-btn" onclick="insertChar('/')">/</button>
+        <button class="shortcut-btn" onclick="insertChar('{')">{</button>
+        <button class="shortcut-btn" onclick="insertChar('}')">}</button>
+        <button class="shortcut-btn" onclick="insertChar('(')">(</button>
+        <button class="shortcut-btn" onclick="insertChar(')')">)</button>
+        <button class="shortcut-btn" onclick="insertChar('\"')">"</button>
+        <button class="shortcut-btn" onclick="insertChar(';')">;</button>
+        <button class="shortcut-btn" onclick="insertChar('\t')">Tab</button>
+    </div>
+
+    <div class="preview-overlay" id="previewOverlay">
+        <div class="preview-header">
+            <button class="btn-back" onclick="closePreview()">← Quay lại sửa code</button>
+        </div>
+        <iframe class="preview-body" id="webPreviewFrame" style="display:none;"></iframe>
+        <div class="console-log-output" id="consoleOutput" style="display:none;">Đang biên dịch và chạy thử code...</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/addon/hint/html-hint.min.js"></script>
+
+    <script>
+        let editor;
+        let currentFile = 'index.html';
+        
+        // Hệ thống cấu trúc tệp dữ liệu giả lập (Lưu trữ cả File và Folder kèm Icon định danh)
+        let fileSystem = [
+            { name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>Demo<\/title>\n<\/head>\n<body>\n  <h1 style="color:coral">Chạy Realtime Web thành công!<\/h1>\n<\/body>\n<\/html>', parent: null },
+            { name: 'assets', type: 'folder', parent: null },
+            { name: 'style.css', type: 'file', content: 'body { background: #f0f0f0; }', parent: 'assets' },
+            { name: 'main.py', type: 'file', content: 'print("Xin chào! Đây là kết quả xuất từ mã nguồn Python chạy trên Đám mây đám Sandbox.")\na = 5\nb = 10\nprint(f"Tổng của {a} + {b} = {a+b}")', parent: null }
+        ];
+
+        window.onload = function() {
+            editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+                lineNumbers: true,
+                theme: "dracula",
+                mode: "htmlmixed",
+                extraKeys: {"Ctrl-Space": "autocomplete"},
+                lineWrapping: true
+            });
+
+            const activeFileData = fileSystem.find(f => f.name === currentFile && f.type === 'file');
+            if(activeFileData) editor.setValue(activeFileData.content);
+
+            editor.on("inputRead", function(cm, change) {
+                if (change.text[0].match(/[a-zA-Z<]/)) {
+                    cm.showHint({ completeOnSingleClick: false });
+                }
+                saveCurrentFileContent();
+                saveAndSyncCloud();
+            });
+
+            renderFileList();
+        };
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function saveCurrentFileContent() {
+            const fileObj = fileSystem.find(f => f.name === currentFile && f.type === 'file');
+            if(fileObj) fileObj.content = editor.getValue();
+        }
+
+        // Hàm lấy icon màu tương ứng cho từng định dạng giống Spck
+        function getFileIcon(name, type) {
+            if (type === 'folder') return '<span style="color: #e3b341;">📁</span>';
+            const ext = name.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'html': return '<span style="color: #e34c26;">🧡</span>';
+                case 'css': return '<span style="color: #563d7c;">💙</span>';
+                case 'js': return '<span style="color: #f1e05a;">💛</span>';
+                case 'py': return '<span style="color: #3572A5;">💚</span>';
+                case 'cpp': return '<span style="color: #f34b7d;">❤️</span>';
+                case 'java': return '<span style="color: #b07219;">🤎</span>';
+                default: return '<span style="color: #8b949e;">📄</span>';
+            }
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = '';
+
+            // Render thư mục trước, file sau
+            fileSystem.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `tree-item ${item.name === currentFile ? 'active' : ''} ${item.parent ? 'indent' : ''}`;
+                div.innerHTML = `${getFileIcon(item.name, item.type)} <span>${item.name}</span>`;
+                
+                if (item.type === 'file') {
+                    div.onclick = () => {
+                        saveCurrentFileContent();
+                        currentFile = item.name;
+                        document.getElementById('current-file-title').innerHTML = `${getFileIcon(item.name, 'file')} ${item.name}`;
+                        editor.setValue(item.content);
+                        
+                        // Tự động nhận diện ngôn ngữ để bật nhắc lệnh thông minh
+                        let ext = item.name.split('.').pop().toLowerCase();
+                        let mode = 'htmlmixed';
+                        if(ext === 'js') mode = 'javascript';
+                        if(ext === 'css') mode = 'css';
+                        if(ext === 'py') mode = 'python';
+                        if(ext === 'cpp' || ext === 'java') mode = 'clike';
+                        
+                        document.getElementById('langSelect').value = mode;
+                        editor.setOption("mode", mode);
+                        toggleSidebar();
+                        renderFileList();
+                    };
+                }
+                list.appendChild(div);
+            });
+        }
+
+        function createNewFile() {
+            const name = prompt("Nhập tên file có đuôi (VD: script.js, app.py, test.cpp):");
+            if (name) {
+                if(fileSystem.some(f => f.name === name)) return alert("Tên file đã tồn tại!");
+                fileSystem.push({ name: name, type: 'file', content: '', parent: null });
+                renderFileList();
+            }
+        }
+
+        function createNewFolder() {
+            const name = prompt("Nhập tên thư mục mới:");
+            if (name) {
+                if(fileSystem.some(f => f.name === name)) return alert("Thư mục đã tồn tại!");
+                fileSystem.push({ name: name, type: 'folder', parent: null });
+                renderFileList();
+            }
+        }
+
+        function changeLanguage() {
+            const mode = document.getElementById('langSelect').value;
+            editor.setOption("mode", mode);
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText(editor.getValue());
+            alert("Đã sao chép mã code!");
+        }
+
+        function insertChar(char) {
+            const doc = editor.getDoc();
+            const cursor = doc.getCursor();
+            doc.replaceRange(char, cursor);
+            editor.focus();
+        }
+
+        // TÍNH NĂNG CHẠY ĐA NGÔN NGỮ (Biên dịch trực tuyến qua API Sandbox Cloud)
+        function runCode() {
+            saveCurrentFileContent();
+            const currentCode = editor.getValue();
+            const ext = currentFile.split('.').pop().toLowerCase();
+            
+            const overlay = document.getElementById('previewOverlay');
+            const iframe = document.getElementById('webPreviewFrame');
+            const consoleOut = document.getElementById('consoleOutput');
+            
+            overlay.classList.add('open');
+            
+            // Nếu là tệp WEB (HTML/JS/CSS) -> Chạy trực tiếp qua cơ chế Iframe Client
+            if (ext === 'html' || ext === 'js' || ext === 'css') {
+                iframe.style.display = "block";
+                consoleOut.style.display = "none";
+                
+                const doc = iframe.contentWindow.document;
+                doc.open();
+                doc.write(currentCode);
+                doc.close();
+            } 
+            // Nếu là các ngôn ngữ lập trình hệ thống (Python, C++, Java...) -> Gửi biên dịch đám mây
+            else {
+                iframe.style.display = "none";
+                consoleOut.style.display = "block";
+                consoleOut.innerText = "⏳ Đang kết nối Sandbox Cloud để biên dịch và chạy mã nguồn của bạn...";
+                
+                let languageMap = { 'py': 'python3', 'cpp': 'cpp', 'java': 'java' };
+                let lang = languageMap[ext] || 'python3';
+
+                // Gửi yêu cầu dịch mã qua API Runtime Engine công cộng
+                fetch('https://api.codex.jaagrav.in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        code: currentCode,
+                        language: lang,
+                        input: ''
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.output) {
+                        consoleOut.innerText = data.output;
+                    } else if(data.error) {
+                        consoleOut.innerText = "❌ LỖI TRÌNH BIÊN DỊCH:\n" + data.error;
+                    } else {
+                        consoleOut.innerText = "Chạy hoàn tất (Không có dữ liệu xuất ra console).";
+                    }
+                })
+                .catch(err => {
+                    consoleOut.innerText = "❌ Lỗi kết nối máy chủ biên dịch: " + err.message;
+                });
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewOverlay').classList.remove('open');
+        }
+
+        // ĐỒNG BỘ CLOUD REALTIME CHO IP KHÁC TRUY CẬP
+        let roomID = "";
+        function shareRealtime() {
+            if(!roomID) roomID = "room_" + Math.floor(Math.random() * 100000);
+            const shareLink = window.location.href.split('?')[0] + "?view=" + roomID;
+            saveAndSyncCloud();
+            prompt("Sao chép liên kết này chia sẻ để máy khác xem REALTIME:", shareLink);
+        }
+
+        function saveAndSyncCloud() {
+            if (!roomID) return;
+            const htmlFile = fileSystem.find(f => f.name === 'index.html');
+            if(htmlFile) localStorage.setItem(roomID, htmlFile.content);
+        }
+
+        // GIAO DIỆN MÁY CON XEM TRỰC TIẾP QUA LINK SHARE
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewID = urlParams.get('view');
+        if(viewID) {
+            document.body.innerHTML = `<iframe id="live-preview" style="width:100vw; height:100vh; border:none; background:#fff;"></iframe>`;
+            setInterval(() => {
+                const savedCode = localStorage.getItem(viewID);
+                if(savedCode) {
+                    const iframe = document.getElementById('live-preview');
+                    const doc = iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(savedCode);
+                    doc.close();
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
