@@ -33,7 +33,6 @@
         .tree-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; color: #c9d1d9; }
         .tree-item:hover { background: #21262d; }
         .tree-item.active { background: #1f242c; color: #58a6ff; border: 1px solid #30363d; }
-        .icon { width: 18px; text-align: center; display: inline-block; font-weight: bold; }
         .indent { margin-left: 15px; }
 
         /* Editor Area */
@@ -60,7 +59,7 @@
         .preview-header { height: 50px; background: #161b22; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #21262d; }
         .btn-back { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .preview-body { flex: 1; width: 100%; border: none; background: #fff; }
-        .console-log-output { flex: 1; background: #0f141c; color: #00ff00; padding: 15px; font-family: monospace; overflow-y: auto; font-size: 14px; white-space: pre-wrap; }
+        .console-log-output { flex: 1; background: #1e1e1e; color: #ffffff; padding: 15px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; font-size: 15px; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -122,7 +121,7 @@
             <button class="btn-back" onclick="closePreview()">← Quay lại sửa code</button>
         </div>
         <iframe class="preview-body" id="webPreviewFrame" style="display:none;"></iframe>
-        <div class="console-log-output" id="consoleOutput" style="display:none;">Đang biên dịch và chạy thử code...</div>
+        <div class="console-log-output" id="consoleOutput" style="display:none;"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
@@ -139,12 +138,12 @@
         let editor;
         let currentFile = 'index.html';
         
-        // Hệ thống cấu trúc tệp dữ liệu giả lập (Lưu trữ cả File và Folder kèm Icon định danh)
+        // Hệ thống lưu trữ cây thư mục chuẩn màu sắc giống hệt Spck
         let fileSystem = [
-            { name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>Demo<\/title>\n<\/head>\n<body>\n  <h1 style="color:coral">Chạy Realtime Web thành công!<\/h1>\n<\/body>\n<\/html>', parent: null },
+            { name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<head>\n <meta charset="utf-8">\n<\/head>\n<body>\n <h1 style="color:#238636">Chạy Giao Diện Web Thành Công!<\/h1>\n<\/body>\n<\/html>', parent: null },
             { name: 'assets', type: 'folder', parent: null },
-            { name: 'style.css', type: 'file', content: 'body { background: #f0f0f0; }', parent: 'assets' },
-            { name: 'main.py', type: 'file', content: 'print("Xin chào! Đây là kết quả xuất từ mã nguồn Python chạy trên Đám mây đám Sandbox.")\na = 5\nb = 10\nprint(f"Tổng của {a} + {b} = {a+b}")', parent: null }
+            { name: 'style.css', type: 'file', content: 'body { background: #0f141c; }', parent: 'assets' },
+            { name: 'main.py', type: 'file', content: 'print("--- KẾT QUẢ THỰC TẾ PYTHON ---")\nprint("Xin chào từ Piston Runtime Engine sandbox!")\na = 20\nb = 26\nprint(f"Tổng kết quả: {a} + {b} = {a + b}")', parent: null }
         ];
 
         window.onload = function() {
@@ -156,9 +155,10 @@
                 lineWrapping: true
             });
 
-            const activeFileData = fileSystem.find(f => f.name === currentFile && f.type === 'file');
-            if(activeFileData) editor.setValue(activeFileData.content);
+            const activeFile = fileSystem.find(f => f.name === currentFile && f.type === 'file');
+            if(activeFile) editor.setValue(activeFile.content);
 
+            // Tự động bật nhắc lệnh gợi ý khi gõ chữ
             editor.on("inputRead", function(cm, change) {
                 if (change.text[0].match(/[a-zA-Z<]/)) {
                     cm.showHint({ completeOnSingleClick: false });
@@ -179,7 +179,7 @@
             if(fileObj) fileObj.content = editor.getValue();
         }
 
-        // Hàm lấy icon màu tương ứng cho từng định dạng giống Spck
+        // Tạo cấu trúc icon màu tương ứng theo đuôi mở rộng file
         function getFileIcon(name, type) {
             if (type === 'folder') return '<span style="color: #e3b341;">📁</span>';
             const ext = name.split('.').pop().toLowerCase();
@@ -198,7 +198,6 @@
             const list = document.getElementById('fileList');
             list.innerHTML = '';
 
-            // Render thư mục trước, file sau
             fileSystem.forEach(item => {
                 const div = document.createElement('div');
                 div.className = `tree-item ${item.name === currentFile ? 'active' : ''} ${item.parent ? 'indent' : ''}`;
@@ -211,7 +210,6 @@
                         document.getElementById('current-file-title').innerHTML = `${getFileIcon(item.name, 'file')} ${item.name}`;
                         editor.setValue(item.content);
                         
-                        // Tự động nhận diện ngôn ngữ để bật nhắc lệnh thông minh
                         let ext = item.name.split('.').pop().toLowerCase();
                         let mode = 'htmlmixed';
                         if(ext === 'js') mode = 'javascript';
@@ -230,9 +228,9 @@
         }
 
         function createNewFile() {
-            const name = prompt("Nhập tên file có đuôi (VD: script.js, app.py, test.cpp):");
+            const name = prompt("Nhập tên file kèm đuôi mở rộng (VD: index.html, main.py, app.cpp):");
             if (name) {
-                if(fileSystem.some(f => f.name === name)) return alert("Tên file đã tồn tại!");
+                if(fileSystem.some(f => f.name === name)) return alert("File này đã tồn tại!");
                 fileSystem.push({ name: name, type: 'file', content: '', parent: null });
                 renderFileList();
             }
@@ -254,7 +252,7 @@
 
         function copyCode() {
             navigator.clipboard.writeText(editor.getValue());
-            alert("Đã sao chép mã code!");
+            alert("Đã copy toàn bộ code!");
         }
 
         function insertChar(char) {
@@ -264,7 +262,7 @@
             editor.focus();
         }
 
-        // TÍNH NĂNG CHẠY ĐA NGÔN NGỮ (Biên dịch trực tuyến qua API Sandbox Cloud)
+        // TÍNH NĂNG CHẠY PHÂN LOẠI NGÔN NGỮ CHUẨN THỰC TẾ (Sử dụng API Piston Engine)
         function runCode() {
             saveCurrentFileContent();
             const currentCode = editor.getValue();
@@ -276,7 +274,7 @@
             
             overlay.classList.add('open');
             
-            // Nếu là tệp WEB (HTML/JS/CSS) -> Chạy trực tiếp qua cơ chế Iframe Client
+            // XỬ LÝ 1: Nhóm Web (HTML/CSS/JS) chạy trực tiếp trên Frontend
             if (ext === 'html' || ext === 'js' || ext === 'css') {
                 iframe.style.display = "block";
                 consoleOut.style.display = "none";
@@ -286,33 +284,44 @@
                 doc.write(currentCode);
                 doc.close();
             } 
-            // Nếu là các ngôn ngữ lập trình hệ thống (Python, C++, Java...) -> Gửi biên dịch đám mây
+            // XỬ LÝ 2: Nhóm ngôn ngữ hệ thống (Python, C++, Java...) biên dịch qua API Sandbox Piston
             else {
                 iframe.style.display = "none";
                 consoleOut.style.display = "block";
-                consoleOut.innerText = "⏳ Đang kết nối Sandbox Cloud để biên dịch và chạy mã nguồn của bạn...";
+                consoleOut.innerText = "⏳ Đang kết nối Server Sandbox...\nĐang biên dịch và thực thi mã nguồn của bạn...";
                 
-                let languageMap = { 'py': 'python3', 'cpp': 'cpp', 'java': 'java' };
-                let lang = languageMap[ext] || 'python3';
+                let langId = "";
+                let version = "*";
+                if(ext === 'py') langId = "python";
+                if(ext === 'cpp') langId = "c++";
+                if(ext === 'java') langId = "java";
 
-                // Gửi yêu cầu dịch mã qua API Runtime Engine công cộng
-                fetch('https://api.codex.jaagrav.in', {
+                if (!langId) {
+                    consoleOut.innerText = "Ngôn ngữ này chưa được cấu hình môi trường chạy online.";
+                    return;
+                }
+
+                // Gửi request chuẩn cấu trúc API Piston Engine để thực thi
+                fetch('https://emkc.org/api/v2/piston/execute', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        code: currentCode,
-                        language: lang,
-                        input: ''
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        language: langId,
+                        version: version,
+                        files: [{ name: currentFile, content: currentCode }]
                     })
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.output) {
-                        consoleOut.innerText = data.output;
-                    } else if(data.error) {
-                        consoleOut.innerText = "❌ LỖI TRÌNH BIÊN DỊCH:\n" + data.error;
+                    if (data.run) {
+                        // Hiển thị trực tiếp kết quả xuất Terminal (stdout hoặc stderr nếu có lỗi cú pháp)
+                        if (data.run.output) {
+                            consoleOut.innerText = data.run.output;
+                        } else {
+                            consoleOut.innerText = "Chương trình chạy thành công (Không có dữ liệu xuất ra màn hình console).";
+                        }
                     } else {
-                        consoleOut.innerText = "Chạy hoàn tất (Không có dữ liệu xuất ra console).";
+                        consoleOut.innerText = "❌ Lỗi hệ thống: Không thể thực thi mã nguồn.";
                     }
                 })
                 .catch(err => {
@@ -322,16 +331,17 @@
         }
 
         function closePreview() {
-            document.getElementById('previewOverlay').classList.remove('open');
+            document.getElementById('previewOverlay').classList.remove('remove');
+            document.getElementById('previewOverlay').className = "preview-overlay"; // Đóng overlay để về sửa tiếp
         }
 
-        // ĐỒNG BỘ CLOUD REALTIME CHO IP KHÁC TRUY CẬP
+        // TÍNH NĂNG ĐỒNG BỘ IP SHARE REALTIME
         let roomID = "";
         function shareRealtime() {
             if(!roomID) roomID = "room_" + Math.floor(Math.random() * 100000);
             const shareLink = window.location.href.split('?')[0] + "?view=" + roomID;
             saveAndSyncCloud();
-            prompt("Sao chép liên kết này chia sẻ để máy khác xem REALTIME:", shareLink);
+            prompt("Hãy copy link phòng này gửi cho máy khác để xem LIVE REALTIME:", shareLink);
         }
 
         function saveAndSyncCloud() {
@@ -340,7 +350,7 @@
             if(htmlFile) localStorage.setItem(roomID, htmlFile.content);
         }
 
-        // GIAO DIỆN MÁY CON XEM TRỰC TIẾP QUA LINK SHARE
+        // ĐỐI VỚI MÁY CON KẾT NỐI QUA IP LIVE REALTIME
         const urlParams = new URLSearchParams(window.location.search);
         const viewID = urlParams.get('view');
         if(viewID) {
