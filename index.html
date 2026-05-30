@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spck Editor Professional</title>
+    <title>Spck Editor IDE Studio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -28,7 +28,7 @@
                 <div class="project-manager-section">
                     <div class="section-title">
                         <span>PROJECTS</span>
-                        <button id="btn-create-project" title="Tạo dự án mới"><i class="fa-solid fa-folder-plus"></i> + New</button>
+                        <button id="btn-create-project" title="Tạo dự án mới"><i class="fa-solid fa-plus"></i> New</button>
                     </div>
                     <select id="project-selector" class="project-dropdown">
                         </select>
@@ -38,8 +38,8 @@
                     <div class="section-title">
                         <span>EXPLORER</span>
                         <div class="tree-actions-icons">
-                            <i class="fa-solid fa-file-circle-plus" id="action-add-file" title="Tạo File"></i>
-                            <i class="fa-solid fa-folder-plus" id="action-add-folder" title="Tạo Thư Mục"></i>
+                            <i class="fa-solid fa-file-circle-plus" id="action-add-file" title="Tạo File Mới"></i>
+                            <i class="fa-solid fa-folder-plus" id="action-add-folder" title="Tạo Thư Mục Mới"></i>
                         </div>
                     </div>
                     <div class="tree-root" id="file-tree-root"></div>
@@ -51,8 +51,8 @@
                 <div class="editor-wrapper">
                     <div id="monaco-editor-core"></div>
                     <div class="welcome-screen" id="empty-workspace-state">
-                        <i class="fa-solid fa-code-branch" style="font-size: 40px; margin-bottom: 12px; color: #1e293b;"></i>
-                        <br>Bấm "+ New" để tạo dự án mới,<br>sau đó chọn hoặc tạo file để bắt đầu lập trình.
+                        <i class="fa-solid fa-folder-open" style="font-size: 40px; margin-bottom: 12px; color: #1e293b;"></i>
+                        <br>Bấm "New" để tạo dự án mới,<br>sau đó click chọn thư mục để tạo file lồng ghép.
                     </div>
                 </div>
             </div>
@@ -60,10 +60,10 @@
 
         <div class="fullscreen-preview-layer" id="live-preview-overlay">
             <button class="preview-exit-floating-btn" id="btn-exit-preview">
-                <i class="fa-solid fa-xmark"></i> THOÁT PREVIEW
+                <i class="fa-solid fa-xmark"></i> THOÁT CODE
             </button>
             <div class="preview-runtime-content">
-                <iframe id="preview-runtime-viewport"></div>
+                <iframe id="preview-runtime-viewport"></iframe>
                 <div id="preview-runtime-terminal"></div>
             </div>
         </div>
