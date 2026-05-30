@@ -2,162 +2,290 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Code Editor & Terminal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spck Code Editor - Ultimate Edition</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
     <style>
         :root {
-            --ios-gray: #1C1C1E;
-            --ios-red: #FF453A;
-            --gemini-bg: #131314;
-            --gemini-input-bg: #1e1f20;
-            --editor-bg: #1e1e1e;
-            --terminal-bg: #000000;
-            --text-color: #ffffff;
-            --border-color: #333333;
+            --bg-dark: #07090e;         /* Màu nền sâu như ảnh 1 */
+            --sidebar-bg: #0b0f19;      /* Màu sidebar tối chuẩn */
+            --editor-bg: #0d111d;       /* Màu nền editor dịu mắt */
+            --top-bar-bg: #090d16;
+            --tab-active: #0d111d;
+            --tab-inactive: #06090f;
+            --accent-color: #3b82f6;
+            --text-main: #e2e8f0;
+            --text-muted: #6272a4;
+            --border-color: #1a2333;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         html, body {
             width: 100%;
             height: 100dvh;
-            background-color: var(--gemini-bg);
-            color: var(--text-color);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow: hidden;
             position: fixed;
         }
 
-        /* Khung container cố định không bị vỡ khi cuộn */
         .app-container {
             width: 100vw;
             height: 100dvh;
             display: flex;
             flex-direction: column;
-            background: #000;
-            position: relative;
-            overflow: hidden;
         }
 
-        /* Thanh điều khiển trên cùng (Top Settings Bar) */
-        .top-settings-bar {
-            height: 50px;
-            background-color: var(--ios-gray);
+        /* BAR TRÊN CÙNG */
+        .top-nav {
+            height: 48px;
+            background-color: var(--top-bar-bg);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 15px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
             z-index: 10;
         }
 
-        .logo-section {
+        .nav-left, .nav-right {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            font-size: 14px;
+            gap: 20px;
         }
 
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        select {
-            background: var(--gemini-input-bg);
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: 6px;
-            outline: none;
+        .nav-icon {
+            font-size: 18px;
+            color: var(--text-muted);
             cursor: pointer;
         }
-
+        .nav-icon.active { color: var(--text-main); }
+        
         .btn-run {
-            background-color: #2ea44f;
-            color: white;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 6px;
-            font-weight: bold;
+            color: #10b981;
+            font-size: 20px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
-        .btn-run:hover {
-            background-color: #2c974b;
-        }
-
-        /* Khu vực làm việc chính chia đôi Editor và Terminal */
-        .main-workspace {
+        /* THÂN GIAO DIỆN CHÍNH */
+        .main-content {
             flex: 1;
             display: flex;
-            flex-direction: column; /* Thích hợp cho giao diện dọc điện thoại */
-            height: calc(100dvh - 50px);
-            overflow: hidden;
-        }
-
-        /* Khung chứa Trình soạn thảo */
-        .editor-wrapper {
-            flex: 1.5;
-            width: 100%;
-            background-color: var(--editor-bg);
             position: relative;
             overflow: hidden;
+            height: calc(100dvh - 48px);
         }
 
-        #editor-container {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Khung chứa Terminal bên dưới */
-        .terminal-wrapper {
-            flex: 1;
-            width: 100%;
-            background-color: var(--terminal-bg);
-            border-top: 2px solid var(--border-color);
+        /* SIDEBAR QUẢN LÝ FILE CHUẨN ẢNH 1 */
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            transition: margin-left 0.25s ease;
         }
 
-        .terminal-header {
-            background: var(--ios-gray);
-            padding: 6px 15px;
-            font-size: 12px;
-            text-transform: uppercase;
+        .sidebar.collapsed {
+            margin-left: -260px;
+        }
+
+        .sidebar-header {
+            padding: 14px 16px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-muted);
             letter-spacing: 1px;
-            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .terminal-output {
-            flex: 1;
-            padding: 12px;
-            font-family: 'Courier New', Courier, monospace;
+        .file-actions {
+            display: flex;
+            gap: 14px;
             font-size: 14px;
+        }
+        .file-actions i { cursor: pointer; color: var(--text-muted); }
+        .file-actions i:hover { color: var(--text-main); }
+
+        /* Vùng cây danh mục File trống lúc mới vào */
+        .file-tree {
+            flex: 1;
             overflow-y: auto;
-            white-space: pre-wrap;
-            line-height: 1.4;
-            color: #00ff00; /* Màu xanh terminal mặc định */
+            padding: 6px 0;
         }
 
-        .terminal-output .error {
-            color: var(--ios-red);
+        .tree-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #cbd5e1;
+        }
+        .tree-item:hover, .tree-item.active {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: white;
         }
         
-        .terminal-output .info {
-            color: #00bfff;
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon { width: 16px; text-align: center; }
+
+        /* Nút ba chấm gọi Menu của từng file (Ảnh 3) */
+        .item-more-btn {
+            color: var(--text-muted);
+            padding: 4px;
+            cursor: pointer;
+        }
+        .item-more-btn:hover { color: white; }
+
+        /* Thư viện màu sắc Icon Spck */
+        .fa-folder { color: #f59e0b; }
+        .fa-java { color: #ea2d2e; }
+        .fa-html5 { color: #e34c26; }
+        .fa-js { color: #f7df1e; }
+        .fa-php { color: #777bb4; }
+        .fa-css3-alt { color: #2196f3; }
+        .fa-file-code { color: #9ccaed; }
+
+        /* KHU VỰC CHỨA EDITOR */
+        .editor-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--editor-bg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .tabs-bar {
+            height: 38px;
+            background-color: var(--tab-inactive);
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tabs-bar::-webkit-scrollbar { display: none; }
+
+        .tab-item {
+            height: 100%;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            background-color: var(--tab-inactive);
+            border-right: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .tab-item.active {
+            background-color: var(--tab-active);
+            color: var(--text-main);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .editor-container-wrapper {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        #editor-container {
+            position: absolute;
+            top:0; left:0; right:0; bottom:0;
+            width: 100%; height: 100%;
+        }
+
+        /* MENU TÙY CHỌN FILE / THƯ MỤC CHUẨN ẢNH 3 */
+        .spck-context-menu {
+            position: absolute;
+            background-color: #121824;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            width: 180px;
+            z-index: 500;
+            padding: 4px 0;
+        }
+        .spck-menu-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .spck-menu-item:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* ĐOẠN KHUNG POPUP ĐỂ CHỮA LỖI EDIT VÙNG CHẠM GIỮ CODE */
+        .editor-hold-menu {
+            position: absolute;
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: none;
+            z-index: 1000;
+            padding: 4px;
+        }
+        .hold-btn {
+            background: none; border: none; color: white;
+            padding: 6px 12px; font-size: 12px; cursor: pointer;
+        }
+        .hold-btn:hover { background-color: var(--accent-color); }
+
+        /* PANEL CHẠY KẾT QUẢ KHÔNG LOAD LẠI TRANG CỦA ẢNH 2 */
+        .output-panel {
+            position: absolute;
+            top: 0; right: -100%;
+            width: 100%; height: 100%;
+            background-color: #000; z-index: 200;
+            transition: right 0.25s cubic-bezier(0.075, 0.82, 0.165, 1);
+            display: flex; flex-direction: column;
+        }
+        .output-panel.open { right: 0; }
+        .output-header {
+            height: 48px; background: var(--top-bar-bg);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; border-bottom: 1px solid var(--border-color);
+        }
+        .output-body { flex: 1; position: relative; background-color: #fff; }
+        #preview-iframe { width: 100%; height: 100%; border: none; background: #fff; }
+        #terminal-box { width: 100%; height: 100%; padding: 16px; font-family: monospace; color: #00ff00; background:#000; overflow-y: auto; white-space: pre-wrap; display: none;}
+
+        /* THÔNG BÁO KHI CHƯA CÓ FILE */
+        .empty-state {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            pointer-events: none;
         }
     </style>
 
@@ -166,168 +294,353 @@
 <body>
 
     <div class="app-container">
-        <div class="top-settings-bar">
-            <div class="logo-section">
-                <span style="color: #e44d26;">⚡</span> IDE PRO MULTILANG
+        <div class="top-nav">
+            <div class="nav-left">
+                <i class="fa-solid fa-bars nav-icon active" id="sidebar-toggle-btn"></i>
+                <i class="fa-solid fa-folder nav-icon"></i>
+                <i class="fa-solid fa-code nav-icon"></i>
             </div>
-            <div class="controls">
-                <select id="language-select">
-                    <option value="javascript">JavaScript</option>
-                    <option value="python">Python 3</option>
-                    <option value="java">Java</option>
-                    <option value="c">C (GCC)</option>
-                    <option value="cpp">C++</option>
-                    <option value="php">PHP</option>
-                    <option value="html">HTML / CSS</option>
-                </select>
-                <button class="btn-run" id="run-btn">
-                    ▶ RUN
-                </button>
+            <div class="nav-right">
+                <i class="fa-solid fa-file-zipper nav-icon" id="export-project-btn" title="Xuất toàn bộ thư mục (ZIP)"></i>
+                <i class="fa-solid fa-play btn-run" id="run-code-btn"></i>
             </div>
         </div>
 
-        <div class="main-workspace">
-            <div class="editor-wrapper">
-                <div id="editor-container"></div>
-            </div>
+        <div class="main-content">
             
-            <div class="terminal-wrapper">
-                <div class="terminal-header">Terminal Output</div>
-                <div class="terminal-output" id="terminal-screen">Welcome to Multilang IDE. Nhấn RUN để thực thi mã nguồn...</div>
+            <div class="sidebar" id="app-sidebar">
+                <div class="sidebar-header">
+                    <span>FILES</span>
+                    <div class="file-actions">
+                        <i class="fa-solid fa-file-circle-plus" id="add-file-btn" title="Tạo File"></i>
+                        <i class="fa-solid fa-folder-plus" id="add-folder-btn" title="Tạo Thư mục"></i>
+                    </div>
+                </div>
+                <div class="file-tree" id="file-tree-dom"></div>
+            </div>
+
+            <div class="editor-zone">
+                <div class="tabs-bar" id="editor-tabs-dom"></div>
+                <div class="editor-container-wrapper">
+                    <div id="editor-container"></div>
+                    <div class="empty-state" id="empty-notice">Không có file nào đang mở.<br>Hãy tạo file mới ở thanh bên trái để lập trình.</div>
+                </div>
+
+                <div class="editor-hold-menu" id="hold-popup">
+                    <button class="hold-btn" onclick="triggerHoldAction('all')">Select All</button>
+                    <button class="hold-btn" onclick="triggerHoldAction('copy')">Copy</button>
+                    <button class="hold-btn" onclick="triggerHoldAction('paste')">Paste</button>
+                </div>
+            </div>
+
+            <div class="output-panel" id="app-output-panel">
+                <div class="output-header">
+                    <span id="output-header-title">Live Preview</span>
+                    <button style="background:none; border:none; color:white; font-size:14px; cursor:pointer;" id="close-output-btn">✕ ĐÓNG</button>
+                </div>
+                <div class="output-body">
+                    <iframe id="preview-iframe"></iframe>
+                    <div id="terminal-box"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="spck-context-menu" id="spck-file-menu">
+        <div class="spck-menu-item" id="menu-opt-export"><i class="fa-solid fa-download"></i> Export File (Xuất)</div>
+        <div class="spck-menu-item" id="menu-opt-rename"><i class="fa-solid fa-pen"></i> Rename (Đổi tên)</div>
+        <div class="spck-menu-item" style="color: #ff453a;" id="menu-opt-delete"><i class="fa-solid fa-trash"></i> Delete (Xóa)</div>
+    </div>
+
     <script>
         let editor;
-        
-        // Các đoạn code mẫu ban đầu tương ứng cho từng ngôn ngữ
-        const codeTemplates = {
-            javascript: `// Lập trình JavaScript\nconsole.log("Xin chào từ JavaScript!");\n\nlet count = 5;\nfor(let i=0; i < count; i++) {\n    console.log("Bước thứ: " + i);\n}`,
-            python: `# Lập trình Python 3\ndef chao_mung(name):\n    print(f"Xin chào, {name}!")\n\nchao_mung("Người dùng")\n# Thử gây lỗi xem terminal báo gì:\n# print(bien_chua_dinh_nghia)`,
-            java: `// Lập trình Java\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Xin chào từ ngôn ngữ Java!");\n    }\n}`,
-            cpp: `// Lập trình C++\n#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Xin chào từ hệ thống C++!" << endl;\n    return 0;\n}`,
-            c: `// Lập trình C\n#include <stdio.h>\n\nint main() {\n    printf("Xin chào từ ngôn ngữ C!\\n");\n    return 0;\n}`,
-            php: `<?php\n// Lập trình PHP\necho "Xin chào từ PHP Server!\\n";\n$dev = ["Học", "Lập", "Trình"];\nprint_r($dev);`,
-            html: `\n<div style="padding: 20px; text-align: center;">\n    <h1 style="color: #4CAF50;">Xin chào thế giới!</h1>\n    <p>Giao diện HTML/CSS chạy trực tiếp mượt mà.</p>\n</div>`
-        };
+        let virtualFiles = {}; // KHỞI TẠO TRỐNG HOÀN TOÀN THEO YÊU CẦU CỦA BẠN
+        let openTabs = [];
+        let activeFile = null;
+        let selectedMenuFile = null; // Lưu vết file đang được nhấn Menu ba chấm
 
-        // Khởi tạo Monaco Editor thông qua RequireJS
+        const extLangMap = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'java': 'java', 'php': 'php', 'swift': 'swift', 'cpp': 'cpp', 'c': 'c' };
+
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
         require(['vs/editor/editor.main'], function() {
+            // Khởi tạo Monaco Editor ẩn ban đầu
             editor = monaco.editor.create(document.getElementById('editor-container'), {
-                value: codeTemplates['javascript'],
-                language: 'javascript',
-                theme: 'vs-dark', // Giao diện tối chuyên nghiệp
-                automaticLayout: true, // Tự động căn chỉnh kích thước theo khung bao ngoài
-                fontSize: 15,
-                tabSize: 4,
-                renderIndentGuides: true, // Kích hoạt đường kẻ căn chỉnh hàng (Đoạn kẻ thẳng đứng cực đẹp như ảnh 2)
-                bracketPairColorization: { enabled: true }, // Đổi màu các cặp ngoặc trùng nhau
-                minimap: { enabled: false }, // Tắt bản đồ thu nhỏ để tối ưu không gian mobile
-                scrollbar: {
-                    vertical: 'visible',
-                    horizontal: 'visible',
-                    useShadows: false
-                }
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                renderIndentGuides: true,
+                minimap: { enabled: false }
+            });
+            
+            checkEmptyState();
+            setupHoldMenu();
+        });
+
+        // ĐIỀU CHỈNH GIAO DIỆN ẨN HIỆN SIDEBAR GIỮ FULL MÀN HÌNH CODE
+        document.getElementById('sidebar-toggle-btn').addEventListener('click', function() {
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.classList.toggle('collapsed');
+            setTimeout(() => { if(editor) editor.layout(); }, 260);
+        });
+
+        // KIỂM TRA TRẠNG THÁI TRỐNG ĐỂ HIỂN THỊ THÔNG BÁO
+        function checkEmptyState() {
+            const notice = document.getElementById('empty-notice');
+            if (!activeFile) {
+                notice.style.display = 'block';
+                if(editor) editor.getContainerNode().style.opacity = '0';
+            } else {
+                notice.style.display = 'none';
+                if(editor) editor.getContainerNode().style.opacity = '1';
+            }
+        }
+
+        // TẠO FILE MỚI ĐỘNG (BẬT RA ĐỂ NHẬP TÊN)
+        document.getElementById('add-file-btn').addEventListener('click', function() {
+            const name = prompt("Nhập tên tệp tin cần tạo (Ví dụ: index.html, babs.java, main.js):");
+            if(!name) return;
+            if(virtualFiles[name] !== undefined) return alert("Tên tệp tin đã tồn tại!");
+
+            virtualFiles[name] = name.endsWith('.html') ? `\n<h1>Hello World</h1>` : `// Code ${name}\n`;
+            renderFileTree();
+            switchToSubFile(name);
+        });
+
+        // TẠO THƯ MỤC MỚI ĐỘNG
+        document.getElementById('add-folder-btn').addEventListener('click', function() {
+            const name = prompt("Nhập tên thư mục mới:");
+            if(!name) return;
+            renderFileTree(name);
+        });
+
+        // VẼ CÂY FILE TREE LÊN MÀN HÌNH CHUẨN ĐẸP
+        function renderFileTree(customFolder = null) {
+            const container = document.getElementById('file-tree-dom');
+            container.innerHTML = '';
+
+            if(customFolder) {
+                const folderItem = document.createElement('div');
+                folderItem.className = "tree-item";
+                folderItem.innerHTML = `<div class="item-info"><i class="fa-solid fa-folder item-icon"></i> <span>${customFolder}</span></div>`;
+                container.appendChild(folderItem);
+            }
+
+            Object.keys(virtualFiles).forEach(filename => {
+                const ext = filename.split('.').pop().toLowerCase();
+                let icon = "fa-file-code";
+                if(ext === 'html') icon = "fa-brands fa-html5";
+                else if(ext === 'js') icon = "fa-brands fa-js";
+                else if(ext === 'css') icon = "fa-brands fa-css3-alt";
+                else if(ext === 'java') icon = "fa-brands fa-java";
+                else if(ext === 'php') icon = "fa-brands fa-php";
+
+                const fileItem = document.createElement('div');
+                fileItem.className = `tree-item ${filename === activeFile ? 'active' : ''}`;
+                fileItem.innerHTML = `
+                    <div class="item-info" onclick="switchToSubFile('${filename}')">
+                        <i class="${icon} item-icon"></i>
+                        <span>${filename}</span>
+                    </div>
+                    <i class="fa-solid fa-ellipsis-vertical item-more-btn" onclick="openSpckMenu(event, '${filename}')"></i>
+                `;
+                container.appendChild(fileItem);
+            });
+            checkEmptyState();
+        }
+
+        // CHUYỂN ĐỔI QUA LẠI GIỮA CÁC FILE & ĐỒNG BỘ TAB TRÊN ĐẦU
+        function switchToSubFile(filename) {
+            if(activeFile && editor) {
+                virtualFiles[activeFile] = editor.getValue();
+            }
+
+            activeFile = filename;
+            if(!openTabs.includes(filename)) openTabs.push(filename);
+
+            const ext = filename.split('.').pop().toLowerCase();
+            editor.setValue(virtualFiles[filename]);
+            monaco.editor.setModelLanguage(editor.getModel(), extLangMap[ext] || 'plaintext');
+
+            renderTabsBar();
+            renderFileTree();
+        }
+
+        function renderTabsBar() {
+            const container = document.getElementById('editor-tabs-dom');
+            container.innerHTML = '';
+
+            openTabs.forEach(tab => {
+                const tabDom = document.createElement('div');
+                tabDom.className = `tab-item ${tab === activeFile ? 'active' : ''}`;
+                tabDom.innerHTML = `<span>${tab}</span>`;
+                tabDom.onclick = () => switchToSubFile(tab);
+                container.appendChild(tabDom);
+            });
+        }
+
+        // CHỨC NĂNG ẢNH 3: HIỂN THỊ MENU POPUP BA CHẤM ĐỘC LẬP CHO TỪNG FILE
+        function openSpckMenu(e, filename) {
+            e.stopPropagation();
+            selectedMenuFile = filename;
+            const menu = document.getElementById('spck-file-menu');
+            menu.style.display = 'flex';
+            menu.style.left = (e.clientX - 160) + 'px';
+            menu.style.top = e.clientY + 'px';
+        }
+
+        // Tắt menu khi ấn ra ngoài
+        document.addEventListener('click', () => {
+            document.getElementById('spck-file-menu').style.display = 'none';
+        });
+
+        // LOGIC TRÊN MENU TÙY CHỌN FILE (ẢNH 3)
+        // 1. Xuất file độc lập đơn lẻ trực tiếp máy người dùng
+        document.getElementById('menu-opt-export').addEventListener('click', function() {
+            if(!selectedMenuFile) return;
+            const blob = new Blob([virtualFiles[selectedMenuFile]], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedMenuFile;
+            a.click();
+        });
+
+        // 2. Đổi tên file
+        document.getElementById('menu-opt-rename').addEventListener('click', function() {
+            if(!selectedMenuFile) return;
+            const newName = prompt("Nhập tên mới cho file:", selectedMenuFile);
+            if(!newName || newName === selectedMenuFile) return;
+            
+            virtualFiles[newName] = virtualFiles[selectedMenuFile];
+            delete virtualFiles[selectedMenuFile];
+            
+            if(activeFile === selectedMenuFile) activeFile = newName;
+            let idx = openTabs.indexOf(selectedMenuFile);
+            if(idx !== -1) openTabs[idx] = newName;
+
+            renderFileTree();
+            renderTabsBar();
+        });
+
+        // 3. Xóa File
+        document.getElementById('menu-opt-delete').addEventListener('click', function() {
+            if(!selectedMenuFile || !confirm(`Bạn có chắc muốn xóa file ${selectedMenuFile}?`)) return;
+            
+            delete virtualFiles[selectedMenuFile];
+            openTabs = openTabs.filter(t => t !== selectedMenuFile);
+            
+            if(activeFile === selectedMenuFile) {
+                activeFile = openTabs.length > 0 ? openTabs[0] : null;
+            }
+
+            if(activeFile) switchToSubFile(activeFile);
+            else {
+                renderFileTree();
+                renderTabsBar();
+            }
+        });
+
+        // CHỨC NĂNG XUẤT TOÀN BỘ PROJECT THƯ MỤC DƯỚI DẠNG ĐÓNG GÓI .ZIP
+        document.getElementById('export-project-btn').addEventListener('click', function() {
+            if(Object.keys(virtualFiles).length === 0) return alert("Thư mục trống, không có gì để đóng gói!");
+            
+            const projectName = prompt("Nhập tên thư mục dự án cần đặt để xuất file ZIP:", "MyProjectAI");
+            if(!projectName) return;
+
+            const zip = new JSZip();
+            // Đưa toàn bộ file ảo hóa hiện tại vào gói nén zip
+            Object.keys(virtualFiles).forEach(filename => {
+                zip.file(`${projectName}/${filename}`, virtualFiles[filename]);
             });
 
-            // Lắng nghe sự kiện thay đổi ngôn ngữ trên Select box
-            document.getElementById('language-select').addEventListener('change', function(e) {
-                const lang = e.target.value;
-                const model = editor.getModel();
-                
-                // Cập nhật kiểu ngôn ngữ biên dịch cho Monaco để có Highlight chuẩn
-                monaco.editor.setModelLanguage(model, lang === 'c' || lang === 'cpp' ? 'cpp' : lang);
-                // Đổi đoạn code mẫu tương ứng
-                editor.setValue(codeTemplates[lang] || "");
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${projectName}.zip`;
+                a.click();
             });
         });
 
-        // Xử lý logic khi ấn nút RUN để thực thi Code
-        document.getElementById('run-btn').addEventListener('click', async function() {
-            const terminal = document.getElementById('terminal-screen');
-            const selectedLang = document.getElementById('language-select').value;
-            const codeContent = editor.getValue();
+        // CHỨC NĂNG CHẠY CODE CHUẨN ẢNH 2 (MÀN HÌNH TRƯỢT TẠI CHỖ KHÔNG TẢI LẠI TRANG)
+        document.getElementById('run-code-btn').addEventListener('click', async function() {
+            if(!activeFile) return alert("Hãy chọn hoặc tạo một file để chạy!");
+            
+            if(editor) virtualFiles[activeFile] = editor.getValue(); // Đồng bộ dữ liệu hiện tại trước khi thực thi
 
-            terminal.innerHTML = `<span class="info">[Hệ thống]: Đang biên dịch và thực thi mã...</span>\n`;
+            const panel = document.getElementById('app-output-panel');
+            const iframe = document.getElementById('preview-iframe');
+            const terminal = document.getElementById('terminal-box');
+            const title = document.getElementById('output-header-title');
 
-            // TRƯỜNG HỢP 1: Nếu là HTML/CSS -> Mở tab/cửa sổ mới để render kết quả trực quan
-            if (selectedLang === 'html') {
-                terminal.innerHTML += `<span class="info">[Hệ thống]: Đã khởi chạy trang HTML sang cửa sổ preview thành công!</span>`;
-                const newWindow = window.open();
-                newWindow.document.write(codeContent);
-                newWindow.document.close();
-                return;
-            }
+            panel.classList.add('open');
 
-            // TRƯỜNG HỢP 2: Nếu là JavaScript thuần -> Có thể thực thi trực tiếp bằng cấu trúc try-catch nội bộ
-            if (selectedLang === 'javascript') {
-                // Tạo một bản bắt log console cũ để chuyển hướng ra màn hình terminal ảo
-                let oldLog = console.log;
-                let logs = [];
-                console.log = function(message) {
-                    logs.push(message);
-                };
+            if(activeFile.endsWith('.html')) {
+                title.innerText = "Live HTML Preview Server";
+                iframe.style.display = 'block';
+                terminal.style.display = 'none';
+                iframe.srcdoc = virtualFiles[activeFile];
+            } else {
+                title.innerText = "Console Multi-language Terminal";
+                iframe.style.display = 'none';
+                terminal.style.display = 'block';
+                terminal.innerText = ">>> Đang gửi yêu cầu và biên dịch thực thi hệ thống...\n";
+
+                let lang = "py"; let ver = "3.10.0";
+                if(activeFile.endsWith('.js')) { lang = "js"; ver = "18.15.0"; }
+                else if(activeFile.endsWith('.java')) { lang = "java"; ver = "15.0.2"; }
+                else if(activeFile.endsWith('.php')) { lang = "php"; ver = "8.2.3"; }
 
                 try {
-                    eval(codeContent); // Thực thi đoạn code JS mã nguồn
-                    terminal.innerHTML += logs.join('\n') || "\n[Chương trình chạy xong nhưng không xuất dữ liệu log]";
-                } catch (err) {
-                    // Nếu lỗi cú pháp hoặc runtime: báo lỗi màu đỏ rực rỡ như ứng dụng thật
-                    terminal.innerHTML += `<span class="error">Runtime Error: ${err.message}\n${err.stack.split('\n')[1]}</span>`;
-                }
-                
-                console.log = oldLog; // Khôi phục lại console mặc định
-                return;
-            }
-
-            // TRƯỜNG HỢP 3: Đối với các ngôn ngữ máy/Server (Python, C++, Java, C, PHP)
-            // Ta sử dụng API Compiler miễn phí và mạnh mẽ của hệ thống Judge0 hoặc tương đương qua cổng Client-side.
-            // Để ứng dụng chạy vĩnh viễn không lỗi, code dưới đây sử dụng cổng biên dịch mở của Piston Component API.
-            
-            const languageMapForAPI = {
-                "python": { language: "py", version: "3.10.0" },
-                "java": { language: "java", version: "15.0.2" },
-                "c": { language: "c", version: "10.2.0" },
-                "cpp": { language: "cpp", version: "10.2.0" },
-                "php": { language: "php", version: "8.2.3" }
-            };
-
-            const apiConfig = languageMapForAPI[selectedLang];
-
-            try {
-                const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        language: apiConfig.language,
-                        version: apiConfig.version,
-                        files: [{ content: codeContent }]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.run) {
-                    // Nếu có lỗi biên dịch hệ thống (Compile Error hoặc Runtime Error) từ Terminal thực tế
-                    if (data.run.stderr) {
-                        terminal.innerHTML += `<span class="error">${data.run.stderr}</span>`;
-                    } else {
-                        // Nếu chạy thành công xuất kết quả ra màn hình màu xanh
-                        terminal.innerHTML += data.run.stdout || "[Chương trình kết thúc: Không có dữ liệu đầu ra]";
+                    const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            language: lang, version: ver,
+                            files: [{ content: virtualFiles[activeFile] }]
+                        })
+                    });
+                    const resData = await res.json();
+                    if(resData.run) {
+                        terminal.innerText = resData.run.stderr ? `[Lỗi chương trình]:\n${resData.run.stderr}` : resData.run.stdout;
                     }
-                } else {
-                    terminal.innerHTML += `<span class="error">Lỗi kết nối Server biên dịch. Vui lòng thử lại sau!</span>`;
+                } catch (e) {
+                    terminal.innerText = "Lỗi kết nối Server biên dịch.";
                 }
-
-            } catch (error) {
-                terminal.innerHTML += `<span class="error">Lỗi hệ thống: Không thể kết nối internet để biên dịch ngôn ngữ này.</span>`;
             }
-            
-            // Tự động cuộn Terminal xuống dòng dưới cùng
-            terminal.scrollTop = terminal.scrollHeight;
         });
+
+        document.getElementById('close-output-btn').addEventListener('click', function() {
+            document.getElementById('app-output-panel').classList.remove('open');
+        });
+
+        // MENU POPUP CHẠM GIỮ TRÊN CODE ĐỂ COPY/PASTE
+        function setupHoldMenu() {
+            const dom = document.getElementById('editor-container');
+            const pop = document.getElementById('hold-popup');
+
+            dom.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                pop.style.display = 'block';
+                pop.style.left = e.clientX + 'px';
+                pop.style.top = (e.clientY - 35) + 'px';
+            });
+
+            document.addEventListener('click', (e) => { if(!pop.contains(e.target)) pop.style.display = 'none'; });
+        }
+
+        function triggerHoldAction(act) {
+            if(!editor) return;
+            if(act === 'all') { editor.focus(); editor.setSelection(editor.getModel().getFullModelRange()); }
+            else if(act === 'copy') { navigator.clipboard.writeText(editor.getModel().getValueInRange(editor.getSelection())); }
+            else if(act === 'paste') { navigator.clipboard.readText().then(t => {
+                const s = editor.getSelection();
+                editor.executeEdits("", [{ range: new monaco.Range(s.startLineNumber, s.startColumn, s.endLineNumber, s.endColumn), text: t }]);
+            }); }
+            document.getElementById('hold-popup').style.display = 'none';
+        }
     </script>
 </body>
 </html>
