@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spck Editor IDE Studio</title>
+    <title>Spck Editor Professional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -12,58 +12,59 @@
     <div class="app-container">
         <div class="top-nav">
             <div class="nav-left">
-                <i class="fa-solid fa-bars nav-icon" id="btn-toggle-menu"></i>
-                <div class="project-title">
-                    <i class="fa-solid fa-folder-open"></i>
-                    <span>camera AI</span>
+                <i class="fa-solid fa-bars nav-icon" id="btn-toggle-sidebar"></i>
+                <div class="current-project-display">
+                    <i class="fa-solid fa-cube text-warning"></i>
+                    <span id="active-project-name">Chưa có dự án</span>
                 </div>
             </div>
             <div class="nav-right">
-                <i class="fa-solid fa-play btn-run" id="btn-run-code" title="Chạy ứng dụng"></i>
+                <i class="fa-solid fa-play btn-run" id="btn-global-run" title="Chạy ứng dụng"></i>
             </div>
         </div>
 
-        <div class="main-content">
-            <div class="sidebar" id="sidebar-menu">
-                <div class="sidebar-header">
-                    <span>FILES</span>
-                    <div class="file-actions">
-                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger" title="Tạo File"></i>
-                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger" title="Tạo Thư Mục"></i>
+        <div class="main-workspace">
+            <div class="sidebar" id="app-sidebar">
+                <div class="project-manager-section">
+                    <div class="section-title">
+                        <span>PROJECTS</span>
+                        <button id="btn-create-project" title="Tạo dự án mới"><i class="fa-solid fa-folder-plus"></i> + New</button>
                     </div>
+                    <select id="project-selector" class="project-dropdown">
+                        </select>
                 </div>
-                <div class="file-tree" id="file-tree-container">
+
+                <div class="file-tree-section">
+                    <div class="section-title">
+                        <span>EXPLORER</span>
+                        <div class="tree-actions-icons">
+                            <i class="fa-solid fa-file-circle-plus" id="action-add-file" title="Tạo File"></i>
+                            <i class="fa-solid fa-folder-plus" id="action-add-folder" title="Tạo Thư Mục"></i>
+                        </div>
                     </div>
+                    <div class="tree-root" id="file-tree-root"></div>
+                </div>
             </div>
 
-            <div class="workspace-body">
-                <div class="tabs-bar" id="tabs-container"></div>
-                
-                <div class="split-pane-container">
-                    <div class="editor-zone">
-                        <div id="editor-container"></div>
-                        <div class="empty-screen-msg" id="empty-msg">
-                            Không có file nào đang mở.<br>Hãy tạo hoặc chọn file ở thanh bên trái để lập trình.
-                        </div>
-                    </div>
-
-                    <div class="output-panel" id="output-screen">
-                        <div class="output-header">
-                            <div class="output-header-left">
-                                <i class="fa-solid fa-globe"></i>
-                                <span id="output-url">localhost</span>
-                            </div>
-                            <div class="output-header-actions">
-                                <i class="fa-solid fa-rotate-right" id="btn-refresh-preview" title="Tải lại"></i>
-                                <button id="btn-close-output"><i class="fa-solid fa-xmark"></i> XONG</button>
-                            </div>
-                        </div>
-                        <div class="output-body">
-                            <iframe id="preview-iframe"></iframe>
-                            <div id="terminal-box"></div>
-                        </div>
+            <div class="editor-workspace">
+                <div class="tabs-scroll-container" id="editor-tabs-bar"></div>
+                <div class="editor-wrapper">
+                    <div id="monaco-editor-core"></div>
+                    <div class="welcome-screen" id="empty-workspace-state">
+                        <i class="fa-solid fa-code-branch" style="font-size: 40px; margin-bottom: 12px; color: #1e293b;"></i>
+                        <br>Bấm "+ New" để tạo dự án mới,<br>sau đó chọn hoặc tạo file để bắt đầu lập trình.
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="fullscreen-preview-layer" id="live-preview-overlay">
+            <button class="preview-exit-floating-btn" id="btn-exit-preview">
+                <i class="fa-solid fa-xmark"></i> THOÁT PREVIEW
+            </button>
+            <div class="preview-runtime-content">
+                <iframe id="preview-runtime-viewport"></div>
+                <div id="preview-runtime-terminal"></div>
             </div>
         </div>
     </div>
