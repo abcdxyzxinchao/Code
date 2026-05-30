@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spck-like Code Editor Pro</title>
+    <title>Spck Workspace Pro</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -13,6 +13,8 @@
             --sidebar-bg: #111622;
             --editor-bg: #151b27;
             --top-bar-bg: #10141f;
+            --tab-active: #151b27;
+            --tab-inactive: #0e121a;
             --accent-color: #3b82f6;
             --text-main: #ffffff;
             --text-muted: #748194;
@@ -35,6 +37,7 @@
             position: fixed;
         }
 
+        /* CONTAINER CHÍNH CỦA APP */
         .app-container {
             width: 100vw;
             height: 100dvh;
@@ -42,7 +45,7 @@
             flex-direction: column;
         }
 
-        /* 1. THANH ĐIỀU HƯỚNG TRÊN CÙNG (Top Menu) */
+        /* 1. THANH MENU TRÊN CÙNG (Top Navigation) */
         .top-nav {
             height: 48px;
             background-color: var(--top-bar-bg);
@@ -50,21 +53,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 12px;
+            padding: 0 16px;
+            z-index: 10;
         }
 
         .nav-left, .nav-right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
         }
 
         .nav-icon {
             font-size: 18px;
             color: var(--text-muted);
             cursor: pointer;
+            transition: color 0.2s;
         }
-        .nav-icon.active { color: var(--text-main); }
+        .nav-icon:hover, .nav-icon.active { color: var(--text-main); }
         
         .btn-run {
             color: #10b981;
@@ -72,27 +77,33 @@
             cursor: pointer;
         }
 
-        /* 2. KHU VỰC LÀM VIỆC CHÍNH */
+        /* 2. THÂN ỨNG DỤNG (CHỨA SIDEBAR VÀ EDITOR) */
         .main-content {
             flex: 1;
             display: flex;
             position: relative;
             overflow: hidden;
+            height: calc(100dvh - 48px);
         }
 
-        /* SIDEBAR QUẢN LÝ FILE (Giống ảnh 1) */
+        /* SIDEBAR FILE MENU - Có thể thu gọn/ẩn hoàn toàn */
         .sidebar {
-            width: 260px;
+            width: 240px;
+            min-width: 240px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
-            z-index: 5;
+            transition: margin-left 0.25s ease-in-out; /* Tạo hiệu ứng đóng mở mượt */
+        }
+
+        /* Class để kích hoạt ẩn sidebar ra khỏi màn hình */
+        .sidebar.collapsed {
+            margin-left: -240px;
         }
 
         .sidebar-header {
-            padding: 12px;
+            padding: 14px 16px;
             font-size: 11px;
             font-weight: bold;
             color: var(--text-muted);
@@ -100,149 +111,131 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
         }
 
         .file-actions {
             display: flex;
-            gap: 12px;
-            font-size: 14px;
+            gap: 14px;
+            font-size: 13px;
         }
         .file-actions i { cursor: pointer; color: var(--text-muted); }
         .file-actions i:hover { color: var(--text-main); }
 
-        /* Danh sách cây thư mục */
         .file-tree {
             flex: 1;
             overflow-y: auto;
-            padding: 4px 0;
+            padding: 6px 0;
         }
 
         .tree-item {
             display: flex;
             align-items: center;
-            padding: 8px 16px;
+            padding: 10px 16px;
             font-size: 14px;
             cursor: pointer;
             gap: 10px;
             color: #cbd5e1;
         }
         .tree-item:hover, .tree-item.active {
-            background-color: #1e293b;
+            background-color: rgba(255, 255, 255, 0.05);
             color: white;
         }
         .tree-item .item-icon { width: 16px; text-align: center; }
         
-        /* Định màu Icon giống hệt ảnh của bạn */
-        .fa-php { color: #4f5b93; }
-        .fa-java { color: #ea2d2e; }
-        .fa-js { color: #f7df1e; }
-        .fa-swift { color: #f05138; }
-        .fa-html5 { color: #e34c26; }
-        .fa-node-js { color: #339933; }
-        .fa-css3-alt { color: #264de4; }
+        /* Màu sắc Icon chuẩn cho từng ngôn ngữ như ảnh */
         .fa-folder { color: #f59e0b; }
+        .fa-java { color: #ea2d2e; }
+        .fa-html5 { color: #e34c26; }
+        .fa-js { color: #f7df1e; }
+        .fa-php { color: #777bb4; }
 
-        /* KHU VỰC TRÌNH SOẠN THẢO */
+        /* VÙNG KHÔNG GIAN LẬP TRÌNH BÊN PHẢI */
         .editor-zone {
             flex: 1;
             display: flex;
             flex-direction: column;
             background-color: var(--editor-bg);
+            overflow: hidden;
             position: relative;
         }
 
-        #editor-container {
-            flex: 1;
-            width: 100%;
+        /* 3. THANH TAB CHỨA CÁC NGÔN NGỮ ĐANG MỞ TRÊN ĐẦU EDITOR */
+        .tabs-bar {
+            height: 38px;
+            background-color: var(--tab-inactive);
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+        /* Ẩn thanh cuộn của Tab bar trên trình duyệt di động */
+        .tabs-bar::-webkit-scrollbar { display: none; }
+
+        .tab-item {
             height: 100%;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            background-color: var(--tab-inactive);
+            border-right: 1px solid var(--border-color);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab-item.active {
+            background-color: var(--tab-active);
+            color: var(--text-main);
+            border-bottom: 2px solid var(--accent-color);
         }
 
-        /* 3. MENU POPUP KHI GIỮ HOẶC CLICK VÀO KHU VỰC CODE (Copy, Paste, Select All) */
+        /* KHUNG CHỨA TRÌNH SOẠN THẢO CODE MONACO */
+        .editor-container-wrapper {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+        #editor-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+        }
+
+        /* POPUP MENU KHI CHẠM GIỮ CODE */
         .custom-context-menu {
             position: absolute;
             background-color: #1e293b;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-radius: 6px;
             display: none;
             z-index: 1000;
             padding: 4px;
-            flex-direction: row;
-            gap: 2px;
         }
-
         .menu-btn {
-            background: none;
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            font-size: 12px;
-            cursor: pointer;
-            border-radius: 4px;
+            background: none; border: none; color: white;
+            padding: 6px 12px; font-size: 12px; cursor: pointer;
         }
         .menu-btn:hover { background-color: var(--accent-color); }
 
-        /* 4. MÀN HÌNH KẾT QUẢ TẠI CHỖ (Không tải lại trang) */
+        /* PANEL KẾT QUẢ TRƯỢT TẠI CHỖ */
         .output-panel {
             position: absolute;
-            top: 0;
-            right: -100%; /* Ẩn sang bên phải */
-            width: 100%;
-            height: 100%;
-            background-color: #000000;
-            z-index: 10;
-            transition: right 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            display: flex;
-            flex-direction: column;
+            top: 0; right: -100%;
+            width: 100%; height: 100%;
+            background-color: #000; z-index: 100;
+            transition: right 0.25s ease-in-out;
+            display: flex; flex-direction: column;
         }
-        .output-panel.open {
-            right: 0; /* Trượt ra hiển thị */
-        }
-
+        .output-panel.open { right: 0; }
         .output-header {
-            height: 48px;
-            background-color: var(--top-bar-bg);
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
+            height: 44px; background: var(--top-bar-bg);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px; border-bottom: 1px solid var(--border-color);
         }
-
-        .btn-close-output {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .output-body {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-
-        #preview-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background-color: white;
-            display: none;
-        }
-
-        #terminal-box {
-            width: 100%;
-            height: 100%;
-            padding: 16px;
-            font-family: monospace;
-            font-size: 14px;
-            color: #00ff00;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            display: block;
-        }
+        .output-body { flex: 1; position: relative; }
+        #preview-iframe, #terminal-box { width: 100%; height: 100%; border: none; }
+        #terminal-box { padding: 16px; font-family: monospace; color: #00ff00; overflow-y: auto; white-space: pre-wrap; }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -252,52 +245,57 @@
     <div class="app-container">
         <div class="top-nav">
             <div class="nav-left">
-                <i class="fa-solid fa-bars nav-icon" id="toggle-sidebar"></i>
-                <i class="fa-solid fa-folder-open nav-icon active"></i>
+                <i class="fa-solid fa-bars nav-icon active" id="btn-toggle-menu"></i>
+                <i class="fa-solid fa-folder nav-icon"></i>
                 <i class="fa-solid fa-code nav-icon"></i>
             </div>
             <div class="nav-right">
-                <i class="fa-solid fa-play btn-run" id="btn-global-run" title="Chạy Code"></i>
+                <i class="fa-solid fa-play btn-run" id="btn-run-code"></i>
             </div>
         </div>
 
         <div class="main-content">
-            <div class="sidebar" id="app-sidebar">
+            <div class="sidebar" id="sidebar-menu">
                 <div class="sidebar-header">
                     <span>FILES</span>
                     <div class="file-actions">
-                        <i class="fa-solid fa-file-circle-plus" id="action-create-file" title="Tạo File mới"></i>
-                        <i class="fa-solid fa-folder-plus" id="action-create-folder" title="Tạo Thư mục mới"></i>
+                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger"></i>
+                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger"></i>
                     </div>
                 </div>
                 
-                <div class="file-tree" id="file-tree-container">
-                    <div class="tree-item"><i class="fa-solid fa-chevron-down item-icon" style="font-size:10px;"></i><i class="fa-solid fa-folder item-icon"></i> camera AI</div>
-                    <div class="tree-item" style="padding-left: 32px;" onclick="switchFile('babs.java', 'java')"><i class="fa-brands fa-java item-icon"></i> babs.java</div>
-                    <div class="tree-item active" style="padding-left: 32px;" onclick="switchFile('index.html', 'html')"><i class="fa-brands fa-html5 item-icon"></i> index.html</div>
-                    <div class="tree-item" style="padding-left: 32px;" onclick="switchFile('gemini.js', 'javascript')"><i class="fa-brands fa-js item-icon"></i> gemini.js</div>
+                <div class="file-tree">
+                    <div class="tree-item"><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i><i class="fa-solid fa-folder item-icon"></i> camera AI</div>
+                    <div class="tree-item" style="padding-left: 32px;" onclick="openFile('babs.java', 'java')"><i class="fa-brands fa-java item-icon"></i> babs.java</div>
+                    <div class="tree-item" style="padding-left: 32px;" onclick="openFile('index.html', 'html')"><i class="fa-brands fa-html5 item-icon"></i> index.html</div>
+                    <div class="tree-item" style="padding-left: 32px;" onclick="openFile('gemini.js', 'javascript')"><i class="fa-brands fa-js item-icon"></i> gemini.js</div>
+                    <div class="tree-item" style="padding-left: 32px;" onclick="openFile('Djdjd.php', 'php')"><i class="fa-brands fa-php item-icon"></i> Djdjd.php</div>
                 </div>
             </div>
 
             <div class="editor-zone">
-                <div id="editor-container"></div>
-                
-                <div class="custom-context-menu" id="editor-popup-menu">
-                    <button class="menu-btn" onclick="triggerEditorAction('selectAll')">Select All</button>
-                    <button class="menu-btn" onclick="triggerEditorAction('copy')">Copy</button>
-                    <button class="menu-btn" onclick="triggerEditorAction('paste')">Paste</button>
-                    <button class="menu-btn" onclick="triggerEditorAction('clear')">Xóa Hết</button>
+                <div class="tabs-bar" id="tabs-container">
+                    </div>
+
+                <div class="editor-container-wrapper">
+                    <div id="editor-container"></div>
+                </div>
+
+                <div class="custom-context-menu" id="context-popup">
+                    <button class="menu-btn" onclick="execAction('all')">Select All</button>
+                    <button class="menu-btn" onclick="execAction('copy')">Copy</button>
+                    <button class="menu-btn" onclick="execAction('paste')">Paste</button>
                 </div>
             </div>
 
-            <div class="output-panel" id="result-panel">
+            <div class="output-panel" id="output-screen">
                 <div class="output-header">
-                    <span id="output-title">Console Terminal</span>
-                    <button class="btn-close-output" id="btn-close-result"><i class="fa-solid fa-xmark"></i> Đóng</button>
+                    <span id="output-type">Output Terminal</span>
+                    <button style="background:none; border:none; color:white; font-size:14px; cursor:pointer;" id="btn-close-output">✕ ĐÓNG</button>
                 </div>
                 <div class="output-body">
-                    <iframe id="preview-iframe"></iframe>
-                    <div id="terminal-box"></div>
+                    <iframe id="preview-iframe" style="display:none;"></iframe>
+                    <div id="terminal-box" style="display:none;"></div>
                 </div>
             </div>
         </div>
@@ -305,187 +303,165 @@
 
     <script>
         let editor;
-        let currentFile = 'index.html';
+        let activeFile = 'index.html';
+        let openedTabs = ['index.html', 'babs.java']; // Mặc định hiển thị trước 2 tab ngôn ngữ đang viết trên đầu
 
-        // Bộ nhớ lưu trữ dữ liệu các file trong máy ảo ảo hóa tạm thời
-        const virtualFiles = {
-            'index.html': `\n<div style="padding: 30px; text-align: center; font-family: sans-serif;">\n    <h1 style="color: #3b82f6;">Ứng dụng chạy mượt mà không cần load lại trang!</h1>\n</div>`,
-            'babs.java': `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Xin chào từ Java ảo hóa!");\n    }\n}`,
-            'gemini.js': `console.log("Hệ thống Javascript đang chạy...");\nlet a = 10;\nlet b = 20;\nconsole.log("Tổng =", a + b);`
+        const filesData = {
+            'index.html': `\n<div style="background:#111; color:#fff; padding:20px; text-align:center;">\n    <h1>Giao diện chạy mượt mà tại chỗ!</h1>\n</div>`,
+            'babs.java': `// Java Source\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello World from Java!");\n    }\n}`,
+            'gemini.js': `// JavaScript Code\nconsole.log("Tính toán logic hệ thống:");\nconsole.log(50 + 100);`,
+            'Djdjd.php': `<?php\n// PHP Code\necho "Hello from PHP Script!";`
         };
 
-        // Khởi tạo hệ thống Monaco Editor cốt lõi
+        const langMapping = { 'html': 'html', 'java': 'java', 'js': 'javascript', 'php': 'php' };
+
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
         require(['vs/editor/editor.main'], function() {
             editor = monaco.editor.create(document.getElementById('editor-container'), {
-                value: virtualFiles[currentFile],
+                value: filesData[activeFile],
                 language: 'html',
                 theme: 'vs-dark',
-                automaticLayout: true,
+                automaticLayout: true, // Cực kỳ quan trọng: Giúp code tự động giãn full màn hình khi ẩn menu
                 fontSize: 15,
-                renderIndentGuides: true, // Đường căn chỉnh thẳng hàng đẹp mắt từ ảnh 2
-                minimap: { enabled: false },
-                scrollbar: { vertical: 'visible', horizontal: 'visible' }
+                renderIndentGuides: true,
+                minimap: { enabled: false }
             });
 
-            // Gắn sự kiện nhấn giữ lâu hoặc click chuột phải/chuột trái đặc biệt để hiện menu Copy/Paste
-            setupSmartPopupMenu();
+            renderTabs();
+            setupLongPressMenu();
         });
 
-        // 1. CHỨC NĂNG ĐỘC QUYỀN: HIỂN THỊ MENU POPUP ĐỂ COPY, PASTE, SELECT ALL, XÓA
-        function setupSmartPopupMenu() {
-            const domNode = document.getElementById('editor-container');
-            const popupMenu = document.getElementById('editor-popup-menu');
+        // TÍNH NĂNG 1: ẨN HIỆN MENU SIDEBAR (Code tự động co giãn giữ nguyên vị trí full màn hình)
+        document.getElementById('btn-toggle-menu').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar-menu');
+            sidebar.classList.toggle('collapsed');
+            
+            // Kích hoạt tính năng vẽ lại khung của Monaco Editor sau khi Sidebar ẩn/hiện để lấp đầy khoảng trống
+            setTimeout(() => { if(editor) editor.layout(); }, 260);
+        });
 
-            // Trên mobile: bắt sự kiện giữ màn hình hoặc click để gọi menu nhanh
-            domNode.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                popupMenu.style.display = 'flex';
-                popupMenu.style.left = e.clientX + 'px';
-                popupMenu.style.top = (e.clientY - 40) + 'px';
-            });
+        // TÍNH NĂNG 2: HIỂN THỊ CÁC TÊN NGÔN NGỮ ĐANG VIẾT LÊN TRÊN ĐẦU (TABS BAR)
+        function renderTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = '';
 
-            // Tắt menu khi click ra vùng khác ngoài thanh menu
-            document.addEventListener('click', function(e) {
-                if(!popupMenu.contains(e.target) && e.target.id !== 'editor-container') {
-                    popupMenu.style.display = 'none';
-                }
+            openedTabs.forEach(fileName => {
+                const ext = fileName.split('.').pop();
+                let iconHtml = `<i class="fa-brands fa-js" style="color:#f7df1e;"></i>`;
+                if(ext==='html') iconHtml = `<i class="fa-brands fa-html5" style="color:#e34c26;"></i>`;
+                if(ext==='java') iconHtml = `<i class="fa-brands fa-java" style="color:#ea2d2e;"></i>`;
+                if(ext==='php') iconHtml = `<i class="fa-brands fa-php" style="color:#777bb4;"></i>`;
+
+                const tab = document.createElement('div');
+                tab.className = `tab-item ${fileName === activeFile ? 'active' : ''}`;
+                tab.innerHTML = `${iconHtml} <span>${fileName}</span>`;
+                
+                // Click vào tab trên đầu để chuyển đổi file cực nhanh
+                tab.onclick = () => {
+                    const fileExt = fileName.split('.').pop();
+                    openFile(fileName, langMapping[fileExt] || 'javascript');
+                };
+                container.appendChild(tab);
             });
         }
 
-        // Thực thi các hành động trên trình soạn thảo khi ấn nút từ Menu nổi
-        function triggerEditorAction(action) {
-            if (!editor) return;
-            
-            if (action === 'selectAll') {
-                editor.focus();
-                editor.setSelection(editor.getModel().getFullModelRange());
-            } else if (action === 'copy') {
-                const selectedText = editor.getModel().getValueInRange(editor.getSelection());
-                navigator.clipboard.writeText(selectedText);
-                alert("Đã sao chép vùng chọn!");
-            } else if (action === 'paste') {
-                navigator.clipboard.readText().then(text => {
-                    const selection = editor.getSelection();
-                    const range = new monaco.Range(selection.startLineNumber, selection.startColumn, selection.endLineNumber, selection.endColumn);
-                    editor.executeEdits("my-source", [{ range: range, text: text, forceMoveMarkers: true }]);
-                });
-            } else if (action === 'clear') {
-                editor.setValue('');
+        // Hàm mở file hệ thống và cập nhật tab
+        function openFile(fileName, lang) {
+            if(editor) filesData[activeFile] = editor.getValue(); // Lưu code cũ lại
+            activeFile = fileName;
+
+            // Nếu file này chưa có trên thanh tab đầu trang, thêm nó vào danh sách mở nhanh
+            if (!openedTabs.includes(fileName)) {
+                openedTabs.push(fileName);
             }
-            document.getElementById('editor-popup-menu').style.display = 'none';
-        }
 
-        // 2. CHỨC NĂNG ĐỔI FILE KHI CLICK VÀO DANH SÁCH FILE TREE CÓ ICON MINH HỌA
-        function switchFile(fileName, lang) {
-            virtualFiles[currentFile] = editor.getValue(); // Lưu lại tiến trình file cũ
-            currentFile = fileName;
-            
-            // Cập nhật lại trình code
-            editor.setValue(virtualFiles[fileName] || "");
+            editor.setValue(filesData[fileName]);
             monaco.editor.setModelLanguage(editor.getModel(), lang);
             
-            // Đổi class active giao diện trực quan
-            document.querySelectorAll('.tree-item').forEach(item => item.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            renderTabs(); // Vẽ lại thanh tab ngôn ngữ trên đầu
         }
 
-        // CHỨC NĂNG TẠO FILE VÀ THƯ MỤC MỚI ĐỘNG (Có phân loại Icon tự động giống Spck)
-        document.getElementById('action-create-file').addEventListener('click', function() {
-            const fileName = prompt("Nhập tên file cần tạo (Ví dụ: main.js, style.css, server.php, babs.java):");
-            if (!fileName) return;
+        // TÍNH NĂNG 3: GIỮ TAY HOẶC PHẢI CHUỘT HIỆN POPUP MENU (Copy, Paste, Select All)
+        function setupLongPressMenu() {
+            const area = document.getElementById('editor-container');
+            const popup = document.getElementById('context-popup');
 
-            let iconClass = "fa-file-code"; // Mặc định nếu đuôi lạ
-            let lang = "javascript";
+            area.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                popup.style.display = 'block';
+                popup.style.left = e.clientX + 'px';
+                popup.style.top = (e.clientY - 35) + 'px';
+            });
 
-            if(fileName.endsWith('.js')) { iconClass = "fa-brands fa-js"; lang="javascript"; }
-            else if(fileName.endsWith('.html')) { iconClass = "fa-brands fa-html5"; lang="html"; }
-            else if(fileName.endsWith('.css')) { iconClass = "fa-brands fa-css3-alt"; lang="css"; }
-            else if(fileName.endsWith('.java')) { iconClass = "fa-brands fa-java"; lang="java"; }
-            else if(fileName.endsWith('.php')) { iconClass = "fa-brands fa-php"; lang="php"; }
-            else if(fileName.endsWith('.swift')) { iconClass = "fa-brands fa-swift"; lang="swift"; }
+            document.addEventListener('click', function(e) {
+                if(!popup.contains(e.target)) popup.style.display = 'none';
+            });
+        }
 
-            virtualFiles[fileName] = `// File ${fileName} khởi tạo mới thành công\n`;
-            
-            // Render thêm phần tử mới vào DOM
-            const container = document.getElementById('file-tree-container');
-            const newItem = document.createElement('div');
-            newItem.className = "tree-item";
-            newItem.style.paddingLeft = "32px";
-            newItem.innerHTML = `<i class="${iconClass} item-icon"></i> ${fileName}`;
-            newItem.onclick = function() { switchFile(fileName, lang); };
-            container.appendChild(newItem);
-        });
+        function execAction(type) {
+            if(type === 'all') {
+                editor.focus();
+                editor.setSelection(editor.getModel().getFullModelRange());
+            } else if(type === 'copy') {
+                const txt = editor.getModel().getValueInRange(editor.getSelection());
+                navigator.clipboard.writeText(txt);
+            } else if(type === 'paste') {
+                navigator.clipboard.readText().then(t => {
+                    const sel = editor.getSelection();
+                    const r = new monaco.Range(sel.startLineNumber, sel.startColumn, sel.endLineNumber, sel.endColumn);
+                    editor.executeEdits("", [{ range: r, text: t }]);
+                });
+            }
+            document.getElementById('context-popup').style.display = 'none';
+        }
 
-        document.getElementById('action-create-folder').addEventListener('click', function() {
-            const folderName = prompt("Nhập tên thư mục mới:");
-            if (!folderName) return;
-            const container = document.getElementById('file-tree-container');
-            const newItem = document.createElement('div');
-            newItem.className = "tree-item";
-            newItem.innerHTML = `<i class="fa-solid fa-folder item-icon"></i> ${folderName}`;
-            container.appendChild(newItem);
-        });
-
-        // Toggle ẩn hiện sidebar quản lý file nhanh
-        document.getElementById('toggle-sidebar').addEventListener('click', function() {
-            const sidebar = document.getElementById('app-sidebar');
-            sidebar.style.transform = sidebar.style.transform === 'translateX(-260px)' ? 'translateX(0)' : 'translateX(-260px)';
-        });
-
-        // 3. CHỨC NĂNG CHẠY CODE SANG TRANG TRƯỢT KHÔNG CẦN TẢI LẠI TRANG (Non-refresh Page Mode)
-        document.getElementById('btn-global-run').addEventListener('click', async function() {
-            const panel = document.getElementById('result-panel');
+        // TÍNH NĂNG 4: CHẠY CODE TRƯỢT SANG TRANG MỚI TẠI CHỖ KHÔNG LOAD LẠI TRANG CHÍNH
+        document.getElementById('btn-run-code').addEventListener('click', async function() {
+            const panel = document.getElementById('output-screen');
             const iframe = document.getElementById('preview-iframe');
             const terminal = document.getElementById('terminal-box');
-            const title = document.getElementById('output-title');
-            
+            const typeText = document.getElementById('output-type');
             const code = editor.getValue();
-            panel.classList.add('open'); // Đẩy khung kết quả trượt mượt mà lên màn hình hiển thị
 
-            // Kiểm tra loại file đang mở để hiển thị cửa sổ tương ứng công nghệ
-            if(currentFile.endsWith('.html')) {
-                // Nếu là file giao diện HTML -> Bật Iframe render không load lại trang chính
-                title.innerText = "Browser Preview HTML";
+            panel.classList.add('open'); // Hiển thị màn hình kết quả dạng Slide trượt mượt mà
+
+            if(activeFile.endsWith('.html')) {
+                typeText.innerText = "Browser Preview (HTML)";
                 iframe.style.display = "block";
                 terminal.style.display = "none";
-                
-                iframe.srcdoc = code; // Gán thẳng ruột mã vào Frame
+                iframe.srcdoc = code;
             } else {
-                // Nếu là các ngôn ngữ lập trình Backend/Console -> Gọi Terminal Runtime
-                title.innerText = "Console Terminal Output";
+                typeText.innerText = "Console Terminal Output";
                 iframe.style.display = "none";
                 terminal.style.display = "block";
-                terminal.innerHTML = "=== Đang thực thi dữ liệu hệ thống... ===\n";
+                terminal.innerText = "Running script...\n";
 
-                let langAPI = "py"; let versionAPI = "3.10.0";
-                if(currentFile.endsWith('.js')) { langAPI = "js"; versionAPI = "18.15.0"; }
-                else if(currentFile.endsWith('.java')) { langAPI = "java"; versionAPI = "15.0.2"; }
-                else if(currentFile.endsWith('.php')) { langAPI = "php"; versionAPI = "8.2.3"; }
+                let apiLang = "py"; let apiVer = "3.10.0";
+                if(activeFile.endsWith('.js')) { apiLang = "js"; apiVer = "18.15.0"; }
+                if(activeFile.endsWith('.java')) { apiLang = "java"; apiVer = "15.0.2"; }
+                if(activeFile.endsWith('.php')) { apiLang = "php"; apiVer = "8.2.3"; }
 
                 try {
-                    // Sử dụng Cloud Piston Engine Compiler kết nối đồng bộ
                     const res = await fetch('https://emkc.org/api/v2/piston/execute', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            language: langAPI, version: versionAPI,
+                            language: apiLang, version: apiVer,
                             files: [{ content: code }]
                         })
                     });
-                    const resData = await res.json();
-                    if(resData.run) {
-                        terminal.innerText = resData.run.stderr ? `[Bug Error Detected]:\n${resData.run.stderr}` : resData.run.stdout;
+                    const data = await res.json();
+                    if(data.run) {
+                        terminal.innerText = data.run.stderr ? `[Bug Error Found]:\n${data.run.stderr}` : data.run.stdout;
                     }
-                } catch (err) {
-                    terminal.innerText = "Lỗi đường truyền biên dịch từ hệ thống máy chủ.";
+                } catch(e) {
+                    terminal.innerText = "Lỗi hệ thống biên dịch kết nối cloud server.";
                 }
             }
         });
 
-        // Đóng trang kết quả quay về trình viết code cũ
-        document.getElementById('btn-close-result').addEventListener('click', function() {
-            document.getElementById('result-panel').removeProperty ? document.getElementById('result-panel').style.right = '-100%' : document.getElementById('result-panel').classList.remove('open');
+        document.getElementById('btn-close-output').addEventListener('click', function() {
+            document.getElementById('output-screen').classList.remove('open');
         });
     </script>
 </body>
