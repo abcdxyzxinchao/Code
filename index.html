@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spck Workspace Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Camera AI Studio - Editor Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -13,41 +13,49 @@
         <div class="top-nav">
             <div class="nav-left">
                 <i class="fa-solid fa-bars nav-icon" id="btn-toggle-menu"></i>
-                <i class="fa-solid fa-folder nav-icon"></i>
-                <i class="fa-solid fa-code nav-icon"></i>
+                <div class="project-title">
+                    <i class="fa-solid fa-folder-open" style="color: #f59e0b; margin-right: 6px;"></i>
+                    <span>camera AI</span>
+                </div>
             </div>
             <div class="nav-right">
-                <i class="fa-solid fa-play btn-run" id="btn-run-code"></i>
+                <i class="fa-solid fa-play btn-run" id="btn-run-code" title="Chạy ứng dụng"></i>
             </div>
         </div>
 
         <div class="main-content">
-            <div class="sidebar collapsed" id="sidebar-menu">
+            <div class="sidebar" id="sidebar-menu">
                 <div class="sidebar-header">
-                    <span>WORKSPACE</span>
+                    <span>FILES</span>
                     <div class="file-actions">
-                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger" title="Tạo File"></i>
-                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger" title="Tạo Thư Mục"></i>
+                        <i class="fa-solid fa-file-circle-plus" id="new-file-trigger" title="Tạo File Mới"></i>
+                        <i class="fa-solid fa-folder-plus" id="new-folder-trigger" title="Tạo Thư Mục Mới"></i>
                     </div>
                 </div>
-                <div class="file-tree" id="file-tree-container"></div>
+                <div class="file-tree" id="file-tree-container">
+                    </div>
             </div>
 
             <div class="editor-zone">
                 <div class="editor-overlay" id="editor-block-overlay"></div>
+
                 <div class="tabs-bar" id="tabs-container"></div>
+                
                 <div class="editor-container-wrapper">
                     <div id="editor-container"></div>
                     <div class="empty-screen-msg" id="empty-msg">
-                        Chưa có file nào được mở.<br>Hãy nhấn biểu tượng Menu góc trái để quản lý dự án.
+                        Không có file nào đang mở.<br>Hãy tạo hoặc chọn file ở thanh bên trái để lập trình.
                     </div>
                 </div>
             </div>
 
             <div class="output-panel" id="output-screen">
                 <div class="output-header">
-                    <span id="output-type">Live Preview</span>
-                    <button id="btn-close-output">✕ ĐÓNG</button>
+                    <div class="output-header-left">
+                        <i class="fa-solid fa-circle" style="color: #10b981; font-size: 10px; margin-right: 8px;"></i>
+                        <span id="output-type">localhost</span>
+                    </div>
+                    <button id="btn-close-output"><i class="fa-solid fa-xmark"></i> XONG</button>
                 </div>
                 <div class="output-body">
                     <iframe id="preview-iframe"></iframe>
