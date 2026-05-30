@@ -2,8 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile IDE Advanced Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile IDE Advanced Pro - Final Edition</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
@@ -13,16 +13,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f141c; color: #e1e4e8; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
         
-        /* Header bar */
-        .header-bar { height: 50px; background: #161b22; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #21262d; z-index: 5; }
+        /* CỐ ĐỊNH HEADER BAR */
+        .header-bar { height: 50px; background: #161b22; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #21262d; z-index: 100; position: sticky; top: 0; width: 100%; flex-shrink: 0; }
         .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; }
         .title { font-weight: bold; font-size: 15px; color: #f0f6fc; display: flex; align-items: center; gap: 6px; }
         
         /* Workspace layout */
         .workspace { display: flex; flex: 1; position: relative; overflow: hidden; }
         
-        /* Sidebar cấu trúc quản lý file chuyên nghiệp */
-        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #21262d; display: flex; flex-direction: column; position: absolute; left: -260px; top: 0; bottom: 0; z-index: 10; transition: 0.2s ease-in-out; }
+        /* Sidebar quản lý file */
+        .sidebar { width: 260px; background: #161b22; border-right: 1px solid #21262d; display: flex; flex-direction: column; position: absolute; left: -260px; top: 0; bottom: 0; z-index: 150; transition: 0.2s ease-in-out; }
         .sidebar.open { left: 0; }
         .sidebar-header { padding: 15px 12px; font-size: 12px; font-weight: bold; color: #8b949e; letter-spacing: 1px; border-bottom: 1px solid #21262d; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-tools { display: flex; gap: 12px; }
@@ -34,33 +34,47 @@
         .tree-item:hover { background: #21262d; }
         .tree-item.active { background: #21262d; color: #58a6ff; border: 1px solid #30363d; font-weight: bold; }
 
-        /* Vùng soạn thảo */
-        .editor-area { flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%; }
-        .tool-bar { background: #0f141c; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #21262d; }
+        /* Vùng soạn thảo - Cuộn mượt code không trôi thanh cụ */
+        .editor-area { flex: 1; display: flex; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
+        
+        /* CỐ ĐỊNH TOOL BAR */
+        .tool-bar { background: #0f141c; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid #21262d; position: sticky; top: 0; z-index: 90; flex-shrink: 0; }
         .current-lang-tag { background: #21262d; color: #58a6ff; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
         .btn-group { display: flex; gap: 6px; }
         .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; }
         .btn-run { background: #238636; color: white; }
         .btn-copy { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
 
-        /* Cấu hình CodeMirror */
-        .CodeMirror { flex: 1; height: 100% !important; font-size: 14px; font-family: 'Fira Code', monospace; }
+        /* Cuộn bên trong Editor */
+        .CodeMirror { flex: 1; height: 100% !important; font-size: 14px; font-family: 'Fira Code', monospace; overflow: auto; }
         
-        /* Phím tắt di động */
-        .mobile-shortcuts { height: 42px; background: #161b22; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #21262d; overflow-x: auto; white-space: nowrap; }
+        /* CỐ ĐỊNH PHÍM TẮT DI ĐỘNG */
+        .mobile-shortcuts { height: 42px; background: #161b22; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #21262d; overflow-x: auto; white-space: nowrap; flex-shrink: 0; position: relative; z-index: 95; }
         .shortcut-btn { color: #8b949e; background: none; border: none; font-size: 16px; font-weight: 500; padding: 4px 8px; cursor: pointer; }
         .shortcut-btn:active { color: #fff; }
 
-        /* MÀN HÌNH PREVIEW KẾT QUẢ ĐÈ LÊN TOÀN MÀN HÌNH */
-        .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 100; display: none; flex-direction: column; }
+        /* MÀN HÌNH PREVIEW OVERLAY TOÀN MÀN HÌNH */
+        .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 200; display: none; flex-direction: column; }
         .preview-overlay.open { display: flex; }
-        .preview-header { height: 50px; background: #161b22; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #21262d; }
-        .btn-back { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
         
-        /* Khung hiển thị Web mượt mà */
+        /* THANH ĐIỀU HƯỚNG GIẢ LẬP SAFARI */
+        .safari-bar { background: #f1f1f1; color: #333; padding: 6px 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #ccc; font-size: 13px; }
+        .safari-btn { background: none; border: none; font-size: 16px; cursor: pointer; color: #555; padding: 2px 6px; }
+        .safari-address-bar { flex: 1; background: #fff; border: 1px solid #ddd; padding: 4px 10px; border-radius: 20px; font-family: sans-serif; font-size: 12px; display: flex; align-items: center; justify-content: space-between; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .safari-indicator { display: flex; align-items: center; gap: 4px; color: #238636; font-weight: bold; font-size: 11px; }
+
+        /* Thiết kế giao diện Terminal & Input */
+        .preview-header { height: 50px; background: #161b22; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid #21262d; flex-shrink: 0; }
         .preview-body { flex: 1; width: 100%; border: none; background: #ffffff; }
-        /* Khung hiển thị Terminal */
-        .console-log-output { flex: 1; background: #0c0f12; color: #00ff66; padding: 16px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; font-size: 15px; white-space: pre-wrap; line-height: 1.5; }
+        
+        /* Khu vực Terminal kèm ô nhập Stdin */
+        .terminal-container { flex: 1; display: flex; flex-direction: column; background: #0c0f12; overflow: hidden; }
+        .console-log-output { flex: 1; color: #00ff66; padding: 16px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
+        
+        /* Ô nhập dữ liệu Terminal (STDIN) cho mọi loại ngôn ngữ */
+        .terminal-input-bar { display: flex; background: #161b22; border-top: 1px solid #21262d; padding: 6px 12px; align-items: center; gap: 8px; }
+        .terminal-input-bar span { font-family: monospace; color: #58a6ff; font-weight: bold; font-size: 14px; }
+        .terminal-input-bar input { flex: 1; background: transparent; border: none; color: #fff; font-family: monospace; font-size: 14px; outline: none; }
     </style>
 </head>
 <body>
@@ -110,10 +124,27 @@
 
     <div class="preview-overlay" id="previewOverlay">
         <div class="preview-header">
-            <button class="btn-back" onclick="closePreview()">← Quay lại sửa code</button>
+            <button class="btn-back" onclick="closePreview()">← Quay lại</button>
+            <button class="btn" id="btnExternalOpen" style="background:#007aff; color:white; font-size:12px;" onclick="openInRealBrowser()">🌐 Mở Safari thật (Fix Đăng Nhập)</button>
         </div>
+
+        <div class="safari-bar" id="safariBar" style="display:none;">
+            <button class="safari-btn" onclick="runCode()">🔄</button>
+            <div class="safari-address-bar">
+                <span id="safariUrlText">safari://localhost/index.html</span>
+                <div class="safari-indicator">🔒 Safari</div>
+            </div>
+        </div>
+
         <iframe class="preview-body" id="webPreviewFrame" style="display:none;"></iframe>
-        <div class="console-log-output" id="consoleOutput" style="display:none;"></div>
+        
+        <div class="terminal-container" id="terminalContainer" style="display:none;">
+            <div class="console-log-output" id="consoleOutput"></div>
+            <div class="terminal-input-bar">
+                <span>$ STDIN &gt;</span>
+                <input type="text" id="terminalStdin" placeholder="Nhập dữ liệu đầu vào tại đây rồi bấm RUN..." />
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.js"></script>
@@ -129,22 +160,20 @@
         let editor;
         let currentFile = 'index.html';
         
-        // Hệ thống dữ liệu gốc lưu trữ 2 file độc lập của bạn
         let fileSystem = [
             { 
                 name: 'index.html', 
                 type: 'file', 
-                content: '<!DOCTYPE html>\n<html lang="vi">\n<head>\n<meta charset="UTF-8">\n<title>Camera AI Studio</title>\n<style>\nbody { background: #000; color: #fff; text-align: center; font-family: sans-serif; padding-top: 50px; }\nh1 { font-size: 28px; font-weight: bold; }\n.btn { background: #007aff; border: none; padding: 12px 24px; color: #fff; border-radius: 8px; font-size: 16px; margin-top: 20px; }\n</style>\n</head>\n<body>\n <h1>Camera AI Studio</h1>\n <p>Đăng nhập hệ thống</p>\n <button class="btn">Tiếp tục với Google</button>\n</body>\n</html>' 
+                content: '<!DOCTYPE html>\n<html lang="vi">\n<head>\n<meta charset="UTF-8">\n<title>Camera AI Studio</title>\n<style>\nbody { background: #111; color: #fff; text-align: center; font-family: sans-serif; padding-top: 50px; }\n.card { background: #222; max-width: 350px; margin: auto; padding: 30px; border-radius: 12px; border: 1px solid #333; }\n.btn { background: #007aff; border: none; padding: 12px 24px; color: #fff; border-radius: 8px; font-size: 16px; margin-top: 20px; width: 100%; cursor: pointer; }\n</style>\n</head>\n<body>\n <div class="card">\n <h1>Camera AI Studio</h1>\n <p>Nếu không click Đăng nhập được trong khung preview này, hãy nhấn nút màu xanh "Mở Safari thật" ở thanh phía trên.</p>\n <button class="btn" onclick="alert(\'Bấm nút mở Safari bên trên thanh công cụ để xử lý xác thực OAuth thật nhé!\')">Tiếp tục với Google</button>\n </div>\n</body>\n</html>' 
             },
             { 
                 name: 'main.py', 
                 type: 'file', 
-                content: 'print(\'đ:đ:đ\')\n\na = 100\nb = 200\nprint(f"Kết quả xử lý biến tính toán: {a} + {b} = {a+b}")' 
+                content: '# Nhập dữ liệu đầu vào từ thanh Terminal bên dưới\nten = input("Nhập tên của mày: ")\nprint(f"Chào mừng {ten} đến với Terminal Sandbox!")\n\na = 100\nb = 200\nprint(f"Kết quả tính toán: {a} + {b} = {a+b}")' 
             }
         ];
 
         window.onload = function() {
-            // Khởi tạo editor
             editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
                 lineNumbers: true,
                 theme: "dracula",
@@ -157,12 +186,10 @@
                 }
             });
 
-            // Lắng nghe sự kiện gõ phím để cập nhật trực tiếp vào hệ thống ảo
             editor.on("change", function() {
                 saveCurrentFileContent();
             });
 
-            // Nạp nội dung file mặc định ban đầu
             const initialFile = fileSystem.find(f => f.name === currentFile);
             if(initialFile) {
                 editor.setValue(initialFile.content);
@@ -199,17 +226,11 @@
                 div.innerHTML = `${getFileIcon(item.name)} <span>${item.name}</span>`;
                 
                 div.onclick = () => {
-                    // 1. Lưu lại file cũ trước khi chuyển
                     saveCurrentFileContent();
-                    
-                    // 2. Chuyển đổi tên file hiện tại
                     currentFile = item.name;
                     document.getElementById('current-file-title').innerHTML = `${getFileIcon(item.name)} ${item.name}`;
-                    
-                    // 3. Đưa code mới lên bộ gõ
                     editor.setValue(item.content);
                     
-                    // 4. Nhận diện mode biên dịch tự động cực chuẩn
                     let ext = item.name.split('.').pop().toLowerCase();
                     let modeName = "htmlmixed";
                     let tagText = "HTML Mixed";
@@ -252,42 +273,60 @@
             editor.focus(); 
         }
 
-        // HÀM RUN THÔNG MINH BIÊN DỊCH CHUẨN XỊN 100%
+        // TÍNH NĂNG MỞ SỰ KIỆN QUA TRÌNH DUYỆT THẬT ĐỂ ĐĂNG NHẬP (FIX LỖI OAUTH)
+        function openInRealBrowser() {
+            const ext = currentFile.split('.').pop().toLowerCase();
+            if (ext === 'html' || ext === 'htm') {
+                const newWindow = window.open();
+                newWindow.document.write(editor.getValue());
+                newWindow.document.close();
+            } else {
+                alert("Tính năng này chỉ hỗ trợ để chạy view thực tế cho file HTML!");
+            }
+        }
+
+        // HÀM CHẠY CODE THÔNG MINH - HỖ TRỢ ĐA NGÔN NGỮ + NHẬP TERMINAL
         function runCode() {
-            saveCurrentFileContent(); // Chắc chắn đã lưu nội dung mới nhất trong editor
+            saveCurrentFileContent(); 
             
             const currentCode = editor.getValue();
             const ext = currentFile.split('.').pop().toLowerCase();
             
             const overlay = document.getElementById('previewOverlay');
             const iframe = document.getElementById('webPreviewFrame');
+            const safariBar = document.getElementById('safariBar');
+            const terminalContainer = document.getElementById('terminalContainer');
             const consoleOut = document.getElementById('consoleOutput');
+            const inputStdin = document.getElementById('terminalStdin').value; // Lấy dữ liệu người dùng nhập vào terminal
             
             overlay.classList.add('open');
             
-            // TRƯỜNG HỢP 1: Chạy trực tiếp file giao diện Web tĩnh (HTML/CSS)
+            // TRƯỜNG HỢP 1: Chạy trực tiếp file giao diện Web tĩnh (DUYỆT SAFARI GIẢ LẬP)
             if (ext === 'html' || ext === 'htm') {
                 iframe.style.display = "block";
-                consoleOut.style.display = "none";
+                safariBar.style.display = "flex"; 
+                terminalContainer.style.display = "none";
+                document.getElementById('safariUrlText').innerText = "safari://localhost/" + currentFile;
                 
                 const doc = iframe.contentWindow.document;
                 doc.open();
                 doc.write(currentCode);
                 doc.close();
             } 
-            // TRƯỜNG HỢP 2: Các ngôn ngữ lập trình Backend (Python, C++, Java...) chạy qua API Sandbox
+            // TRƯỜNG HỢP 2: Chạy Terminal cho Backend (Python, C++, Java...) qua Sandbox
             else {
                 iframe.style.display = "none";
-                consoleOut.style.display = "block";
-                consoleOut.innerText = "⏳ Đang đồng bộ File System lên máy chủ Sandbox...\nĐang tiến hành biên dịch...";
+                safariBar.style.display = "none";
+                terminalContainer.style.display = "flex";
+                consoleOut.innerText = "⏳ Đang kết nối server Sandbox...\nĐang truyền biến STDIN đầu vào và biên dịch...";
 
-                let languageId = 71; // Mặc định Python 3
+                let languageId = 71; // Python 3 mặc định
                 if (ext === 'py') languageId = 71;
                 if (ext === 'cpp') languageId = 54;
                 if (ext === 'c') languageId = 50;
                 if (ext === 'java') languageId = 62;
 
-                // Gửi request chuẩn API cổng mở bảo mật cao không bị CORS chặn
+                // Gửi request kèm theo stdin nhập từ thanh điều khiển
                 fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
                     method: 'POST',
                     headers: {
@@ -298,7 +337,7 @@
                     body: JSON.stringify({
                         source_code: currentCode,
                         language_id: languageId,
-                        stdin: ""
+                        stdin: inputStdin // Truyền trực tiếp dữ liệu ô input vào luồng đọc hệ thống
                     })
                 })
                 .then(res => res.json())
@@ -314,7 +353,7 @@
                     }
                 })
                 .catch(err => {
-                    consoleOut.innerText = "❌ Lỗi kết nối Sandbox: " + err.message + "\nHãy thử nhấn RUN lại lần nữa.";
+                    consoleOut.innerText = "❌ Lỗi kết nối Sandbox: " + err.message + "\nHãy bấm RUN thử lại.";
                 });
             }
         }
