@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Web IDE Ultimate</title>
+    <title>Mobile Web IDE Pro</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
@@ -29,7 +29,7 @@
         .sidebar-tools button { background: none; border: none; color: #58a6ff; font-size: 16px; cursor: pointer; }
         .file-list { padding: 8px; flex: 1; overflow-y: auto; }
         
-        /* Cây thư mục có icon màu sắc sinh động */
+        /* Cây thư mục */
         .tree-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; color: #c9d1d9; }
         .tree-item:hover { background: #21262d; }
         .tree-item.active { background: #21262d; color: #58a6ff; border: 1px solid #30363d; }
@@ -43,30 +43,29 @@
         .btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; }
         .btn-run { background: #238636; color: white; }
         .btn-copy { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
-        .btn-share { background: #8957e5; color: white; }
 
         /* CodeMirror */
         .CodeMirror { flex: 1; height: 100% !important; font-size: 14px; font-family: 'Fira Code', monospace; }
         
-        /* Bàn phím ảo hỗ trợ ký tự nhanh cho Mobile */
+        /* Bàn phím ảo */
         .mobile-shortcuts { height: 42px; background: #161b22; display: flex; align-items: center; gap: 16px; padding: 0 12px; border-top: 1px solid #21262d; overflow-x: auto; white-space: nowrap; }
         .shortcut-btn { color: #8b949e; background: none; border: none; font-size: 16px; font-weight: 500; padding: 4px 8px; cursor: pointer; }
         .shortcut-btn:active { color: #fff; }
 
-        /* MÀN HÌNH PREVIEW OVERLAY XỊN SỬA LỖI NÚT QUAY LẠI */
+        /* MÀN HÌNH PREVIEW OVERLAY */
         .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e1e; z-index: 100; display: none; flex-direction: column; }
         .preview-overlay.open { display: flex; }
         .preview-header { height: 50px; background: #161b22; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #21262d; }
         .btn-back { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .preview-body { flex: 1; width: 100%; border: none; background: #ffffff; }
-        .console-log-output { flex: 1; background: #1e1e1e; color: #ffffff; padding: 16px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; font-size: 15px; white-space: pre-wrap; line-height: 1.5; }
+        .console-log-output { flex: 1; background: #121212; color: #00ff00; padding: 16px; font-family: 'Courier New', Courier, monospace; overflow-y: auto; font-size: 15px; white-space: pre-wrap; line-height: 1.5; }
     </style>
 </head>
 <body>
 
     <div class="header-bar">
         <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-        <div class="title" id="current-file-title">🧡 index.html</div>
+        <div class="title" id="current-file-title">💚 main.py</div>
         <button class="menu-btn" style="color: #238636;" onclick="runCode()">▶</button>
     </div>
 
@@ -75,26 +74,26 @@
             <div class="sidebar-header">
                 <span>PROJECT EXPLORER</span>
                 <div class="sidebar-tools">
-                    <button onclick="createNewFile()" title="Tạo File">📄+</button>
-                    <button onclick="createNewFolder()" title="Tạo Thư mục">📁+</button>
+                    <button onclick="createNewFile()">📄+</button>
+                    <button onclick="createNewFolder()">📁+</button>
                 </div>
             </div>
-            <div class="file-list" id="fileList">
-                </div>
+            <div class="file-list" id="fileList"></div>
         </div>
 
         <div class="editor-area">
             <div class="tool-bar">
                 <select id="langSelect" onchange="changeLanguage()">
-                    <option value="htmlmixed">HTML / Web</option>
-                    <option value="javascript">JavaScript</option>
                     <option value="python">Python 3</option>
+                    <option value="htmlmixed">HTML / Web</option>
+                    <option value="javascript">JavaScript (Node)</option>
                     <option value="css">CSS</option>
-                    <option value="clike">C / C++ / Java</option>
+                    <option value="clike-c">C</option>
+                    <option value="clike-cpp">C++</option>
+                    <option value="clike-java">Java</option>
                 </select>
                 <div class="btn-group">
                     <button class="btn btn-copy" onclick="copyCode()">Copy</button>
-                    <button class="btn btn-share" onclick="shareRealtime()">🔗 Share IP</button>
                     <button class="btn btn-run" onclick="runCode()">RUN</button>
                 </div>
             </div>
@@ -137,12 +136,9 @@
         let editor;
         let currentFile = 'main.py';
         
-        // Hệ thống lưu trữ cây thư mục
         let fileSystem = [
-            { name: 'main.py', type: 'file', content: 'print("--- KẾT QUẢ THỰC TẾ PYTHON ---")\nprint("Xin chào! Code chạy trực tiếp trên Đám mây Sandbox.")\n\na = 20\nb = 26\nprint(f"Tổng kết quả: {a} + {b} = {a + b}")', parent: null },
-            { name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<head>\n <meta charset="utf-8">\n<\/head>\n<body>\n <h1 style="color:#238636">Chạy Giao Diện Web Thành Công!<\/h1>\n<\/body>\n<\/html>', parent: null },
-            { name: 'assets', type: 'folder', parent: null },
-            { name: 'style.css', type: 'file', content: 'body { background: #0f141c; }', parent: 'assets' }
+            { name: 'main.py', type: 'file', content: 'print("--- KẾT QUẢ PYTHON THỰC TẾ ---")\na = 20\nb = 26\nprint(f"Tổng kết quả: {a} + {b} = {a + b}")', parent: null },
+            { name: 'index.html', type: 'file', content: '<!DOCTYPE html>\n<html>\n<body>\n <h1 style="color:#238636">Giao diện Web HTML chạy thực tế!</h1>\n</body>\n</html>', parent: null }
         ];
 
         window.onload = function() {
@@ -152,36 +148,21 @@
                 mode: "python",
                 indentUnit: 4,
                 smartIndent: true,
-                indentWithTabs: false,
+                lineWrapping: true,
                 extraKeys: {
-                    "Ctrl-Space": "autocomplete",
-                    "Tab": function(cm) {
-                        cm.replaceSelection("    ", "end");
-                    }
-                },
-                lineWrapping: true
+                    "Tab": function(cm) { cm.replaceSelection("    ", "end"); }
+                }
             });
 
             const activeFile = fileSystem.find(f => f.name === currentFile && f.type === 'file');
             if(activeFile) {
                 editor.setValue(activeFile.content);
                 document.getElementById('current-file-title').innerHTML = `${getFileIcon(currentFile, 'file')} ${currentFile}`;
-                document.getElementById('langSelect').value = 'python';
             }
-
-            editor.on("inputRead", function(cm, change) {
-                if (change.text[0].match(/[a-zA-Z<]/)) {
-                    cm.showHint({ completeOnSingleClick: false });
-                }
-                saveCurrentFileContent();
-            });
-
             renderFileList();
         };
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
         function saveCurrentFileContent() {
             const fileObj = fileSystem.find(f => f.name === currentFile && f.type === 'file');
@@ -206,27 +187,26 @@
         function renderFileList() {
             const list = document.getElementById('fileList');
             list.innerHTML = '';
-
             fileSystem.forEach(item => {
                 const div = document.createElement('div');
-                div.className = `tree-item ${item.name === currentFile ? 'active' : ''} ${item.parent ? 'indent' : ''}`;
+                div.className = `tree-item ${item.name === currentFile ? 'active' : ''}`;
                 div.innerHTML = `${getFileIcon(item.name, item.type)} <span>${item.name}</span>`;
-                
                 if (item.type === 'file') {
                     div.onclick = () => {
                         saveCurrentFileContent();
                         currentFile = item.name;
                         document.getElementById('current-file-title').innerHTML = `${getFileIcon(item.name, 'file')} ${item.name}`;
                         editor.setValue(item.content);
-                        
                         let ext = item.name.split('.').pop().toLowerCase();
-                        let mode = 'htmlmixed';
+                        let mode = 'python';
+                        if(ext === 'html') mode = 'htmlmixed';
                         if(ext === 'js') mode = 'javascript';
                         if(ext === 'css') mode = 'css';
-                        if(ext === 'py') mode = 'python';
-                        if(ext === 'cpp' || ext === 'c' || ext === 'java') mode = 'clike';
+                        if(ext === 'c') mode = 'text/x-csrc';
+                        if(ext === 'cpp') mode = 'text/x-c++src';
+                        if(ext === 'java') mode = 'text/x-java';
                         
-                        document.getElementById('langSelect').value = mode;
+                        document.getElementById('langSelect').value = ext === 'py' ? 'python' : (ext === 'js' ? 'javascript' : (ext === 'html' ? 'htmlmixed' : (ext === 'css' ? 'css' : 'clike-' + ext)));
                         editor.setOption("mode", mode);
                         toggleSidebar();
                         renderFileList();
@@ -237,48 +217,30 @@
         }
 
         function createNewFile() {
-            const name = prompt("Nhập tên file kèm đuôi mở rộng (VD: main.py, test.cpp, index.html):");
+            const name = prompt("Nhập tên file kèm đuôi mở rộng (VD: main.py, app.js, code.cpp):");
             if (name) {
-                if(fileSystem.some(f => f.name === name)) return alert("File này đã tồn tại!");
                 fileSystem.push({ name: name, type: 'file', content: '', parent: null });
                 renderFileList();
             }
         }
 
-        function createNewFolder() {
-            const name = prompt("Nhập tên thư mục mới:");
-            if (name) {
-                if(fileSystem.some(f => f.name === name)) return alert("Thư mục đã tồn tại!");
-                fileSystem.push({ name: name, type: 'folder', parent: null });
-                renderFileList();
-            }
-        }
-
         function changeLanguage() {
-            const mode = document.getElementById('langSelect').value;
+            let val = document.getElementById('langSelect').value;
+            let mode = 'python';
+            if(val === 'htmlmixed') mode = 'htmlmixed';
+            if(val === 'javascript') mode = 'javascript';
+            if(val === 'css') mode = 'css';
+            if(val === 'clike-c') mode = 'text/x-csrc';
+            if(val === 'clike-cpp') mode = 'text/x-c++src';
+            if(val === 'clike-java') mode = 'text/x-java';
             editor.setOption("mode", mode);
         }
 
-        function copyCode() {
-            navigator.clipboard.writeText(editor.getValue());
-            alert("Đã copy toàn bộ code!");
-        }
+        function copyCode() { navigator.clipboard.writeText(editor.getValue()); alert("Đã copy code!"); }
+        function insertChar(char) { editor.getDoc().replaceRange(char, editor.getDoc().getCursor()); editor.focus(); }
+        function handleTabShortcut() { editor.getDoc().replaceRange("    ", editor.getDoc().getCursor()); editor.focus(); }
 
-        function insertChar(char) {
-            const doc = editor.getDoc();
-            const cursor = doc.getCursor();
-            doc.replaceRange(char, cursor);
-            editor.focus();
-        }
-
-        function handleTabShortcut() {
-            const doc = editor.getDoc();
-            const cursor = doc.getCursor();
-            doc.replaceRange("    ", cursor);
-            editor.focus();
-        }
-
-        // HÀM CHẠY CODE ĐA NGÔN NGỮ ĐÃ SỬA LỖI KHÔNG PHỤ THUỘC API CŨ
+        // HÀM CHẠY CODE ĐA NGÔN NGỮ CHUẨN THỰC THẾ QUA JUDGE0 API
         function runCode() {
             saveCurrentFileContent();
             const currentCode = editor.getValue();
@@ -288,103 +250,62 @@
             const iframe = document.getElementById('webPreviewFrame');
             const consoleOut = document.getElementById('consoleOutput');
             
-            // Bật overlay kết quả đè lên toàn màn hình
             overlay.classList.add('open');
             
-            // TH1: Chạy file giao diện Web (HTML/CSS/JS)
-            if (ext === 'html' || ext === 'js' || ext === 'css') {
+            if (ext === 'html' || ext === 'js' && document.getElementById('langSelect').value === 'htmlmixed' || ext === 'css') {
                 iframe.style.display = "block";
                 consoleOut.style.display = "none";
-                
                 const doc = iframe.contentWindow.document;
-                doc.open();
-                doc.write(currentCode);
-                doc.close();
-            } 
-            // TH2: Biên dịch các ngôn ngữ hệ thống (Python, C, C++, Java...) qua OneCompiler Engine cực ổn định
-            else {
+                doc.open(); doc.write(currentCode); doc.close();
+            } else {
                 iframe.style.display = "none";
                 consoleOut.style.display = "block";
-                consoleOut.innerText = "⏳ Đang kết nối máy chủ Sandbox...\nĐang thực thi mã nguồn " + ext.toUpperCase() + " của bạn...";
-                
-                let languageMap = { 'py': 'python', 'cpp': 'cpp', 'c': 'c', 'java': 'java' };
-                let lang = languageMap[ext];
+                consoleOut.innerText = "⏳ Đang kết nối Sandbox compiler...\nĐang chạy mã nguồn của bạn...";
 
-                if (!lang) {
-                    consoleOut.innerText = "Hệ thống chưa hỗ trợ môi trường chạy cho đuôi file này.";
-                    return;
-                }
+                // Khớp mã ngôn ngữ (Language ID) theo chuẩn Judge0 CE
+                let languageId = 71; // Mặc định Python 3
+                if (ext === 'py') languageId = 71;
+                if (ext === 'js') languageId = 63; // Node.js
+                if (ext === 'c') languageId = 50;
+                if (ext === 'cpp') languageId = 54;
+                if (ext === 'java') languageId = 62;
 
-                // Sử dụng API cổng mở OneCompiler Engine cực kỳ khỏe, không bị lỗi CORS
-                fetch('https://onecompiler-apis.p.rapidapi.com/v1/run', {
+                // Gửi yêu cầu biên dịch trực tiếp (Không lo chặn CORS hoặc token lỗi)
+                fetch('https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true', {
                     method: 'POST',
                     headers: {
                         'content-type': 'application/json',
-                        'X-RapidAPI-Key': 'd99965908emshb944f2d7fa85b13p194bf0jsn3b9a117b3d39', // Token Gateway dự phòng public
-                        'X-RapidAPI-Host': 'onecompiler-apis.p.rapidapi.com'
+                        'x-rapidapi-key': 'd99965908emshb944f2d7fa85b13p194bf0jsn3b9a117b3d39',
+                        'x-rapidapi-host': 'judge0-ce.p.rapidapi.com'
                     },
                     body: JSON.stringify({
-                        language: lang,
-                        stdin: "",
-                        files: [{ name: currentFile, content: currentCode }]
+                        source_code: currentCode,
+                        language_id: languageId,
+                        stdin: ""
                     })
                 })
                 .then(res => res.json())
                 .then(data => {
+                    // Xử lý đầu ra Terminal chính xác theo tiêu chuẩn thực tế
                     if (data.stdout) {
                         consoleOut.innerText = data.stdout;
                     } else if (data.stderr) {
-                        consoleOut.innerText = "❌ LỖI LOG CÚ PHÁP:\n" + data.stderr;
-                    } else if (data.exception) {
-                        consoleOut.innerText = "❌ LỖI NGOẠI LỆ:\n" + data.exception;
+                        consoleOut.innerText = "❌ LỖI THỰC THI (Stderr):\n" + data.stderr;
+                    } else if (data.compile_output) {
+                        consoleOut.innerText = "❌ LỖI BIÊN DỊCH (Compile Error):\n" + data.compile_output;
                     } else {
-                        consoleOut.innerText = "Chương trình thực thi hoàn tất (Không có kết quả xuất ra Console).";
+                        consoleOut.innerText = "Chương trình đã chạy xong (Không có kết quả xuất ra Console).";
                     }
                 })
                 .catch(err => {
-                    // Nếu Gateway bị nghẽn, tự động chuyển sang phương thức dự phòng khẩn cấp qua nền tảng Glot.io
-                    consoleOut.innerText = "⏳ Đang chuyển hướng qua Máy chủ Sandbox dự phòng...";
-                    runCodeBackup(lang, currentCode);
+                    consoleOut.innerText = "❌ Lỗi kết nối máy chủ biên dịch: " + err.message;
                 });
             }
         }
 
-        // Hàm chạy dự phòng khi mạng nghẽn
-        function runCodeBackup(lang, code) {
-            let glotLang = lang === 'python' ? 'python' : lang;
-            fetch(`https://run.glot.io/languages/${glotLang}/latest`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    files: [{ name: currentFile, content: code }]
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                const consoleOut = document.getElementById('consoleOutput');
-                if(data.stdout) consoleOut.innerText = data.stdout;
-                else if(data.stderr) consoleOut.innerText = "❌ LỖI:\n" + data.stderr;
-                else consoleOut.innerText = "Chạy hoàn tất.";
-            })
-            .catch(e => {
-                document.getElementById('consoleOutput').innerText = "❌ Không kết nối được đến bất kỳ cụm Sandbox nào. Hãy kiểm tra lại mạng điện thoại của bạn!";
-            });
-        }
-
-        // SỬA LỖI NÚT QUAY LẠI CHUẨN XÁC
         function closePreview() {
-            const overlay = document.getElementById('previewOverlay');
-            overlay.classList.remove('open'); // Tắt class hiển thị để đóng đè màn hình kết quả về lại IDE
-            editor.focus(); // Trả con trỏ chuột về lại bộ gõ code
-        }
-
-        // ĐỒNG BỘ REALTIME
-        let roomID = "";
-        function shareRealtime() {
-            if(!roomID) roomID = "room_" + Math.floor(Math.random() * 100000);
-            const shareLink = window.location.href.split('?')[0] + "?view=" + roomID;
-            localStorage.setItem(roomID, editor.getValue());
-            prompt("Hãy copy link phòng này chia sẻ để máy khác xem LIVE:", shareLink);
+            document.getElementById('previewOverlay').classList.remove('open');
+            editor.focus();
         }
     </script>
 </body>
